@@ -8,18 +8,27 @@ import com.j256.ormlite.table.DatabaseTable;
 public class Statistic {
 	@DatabaseField(generatedId = true)
 	private int _id;
+	
 	@DatabaseField(canBeNull = false)
 	private String phonenumber;
+	
 	@DatabaseField(canBeNull = true)
 	private String username;
+	
 	@DatabaseField(canBeNull = true)
 	private String contacturi;
+	
 	@DatabaseField(canBeNull = true)
 	private long callcounts;
+	
 	@DatabaseField(canBeNull = true)
 	private long callduration;
+	
 	@DatabaseField(canBeNull = true)
 	private long callaverage;
+	
+	@DatabaseField(canBeNull = true)
+	private long statisticdate;
 	
 	public Statistic() {}
 
@@ -69,6 +78,14 @@ public class Statistic {
 
 	public void setContacturi(String contacturi) {
 		this.contacturi = contacturi;
+	}
+
+	public long getStatisticdate() {
+		return statisticdate;
+	}
+
+	public void setStatisticdate(long statisticdate) {
+		this.statisticdate = statisticdate;
 	}
 	
 	

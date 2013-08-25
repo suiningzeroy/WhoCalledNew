@@ -22,6 +22,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service android:process=":whocalled_background" 
+	    	android:name=".WhoCalledService"
+	    	android:label="@string/service_name"/>
+        <receiver android:name=".WhocalledStartupReceiver" 
+			android:process=":whocalled_background">
+	        	<intent-filter>
+	        		<action android:name="android.intent.action.BOOT_COMPLETED"/>
+	        	</intent-filter>
+	        	<intent-filter>
+	        		<action android:name="android.whocalled.Start"/>
+	        	</intent-filter>
+		</receiver>
+		<receiver android:name=".AlarmReceiver" 
+			android:process=":whocalled_background" />
     </application>
 
 </manifest>
