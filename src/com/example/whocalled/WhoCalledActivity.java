@@ -34,6 +34,8 @@ import android.graphics.BitmapFactory;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -48,19 +50,18 @@ import android.widget.TextView;
 public class WhoCalledActivity extends Activity implements Handler.Callback {
 
 	private static final String LOGGING_TAG = "WhoCalled Activity";
-	public static final String DASH = "-";
-	public static final String PHONE_NUMBER = "Number";
-	public static final String NAME = "Name";
-	public static final String DURATION = "Duration";
-	public static final String COUNTS = "Counts";
-	public static final String AVERAGE_DURATION = "Average-duration";
-	public static final String IMAGE = "UserImage";	
-	public final String IS_INITIAL_COMPLETE_FLAG = "IsInitialComplete";
-	public final String INITIAL_COMPLETE_MESSAGE = "completed";
+	public final String MESSAGE_FLAG = "MESSAGE_FLAG";
+	public final int INITIAL_COMPLETE_MESSAGE = 111;
+	public final int ORDER_BY_CHANGED = 222;
 	private final String  IS_INITIAL_FLAG = "IsIntial";
+	private final String ORDER_BY_DURATON = "callduration";
+	private final String ORDER_BY_CALLCOUNTS = "callcounts";
+	private final String ORDER_BY_AVEDURATON = "callaverage";
+	private final String ORDER_BY = "Order_By";
 	
-	
+  
 	private String orderByColumn;
+	private SharedPreferences prefs;
 	private WhoCalledOrmLiteHelper ormLiteHelper;
 	private WhoCalledApp app;
 	public static final String myACTION="android.whocalled.Start";
@@ -69,12 +70,15 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 	private List<Statistic> statistics;
 	private  List<Statistic> newstatistics;
 	private Handler handler = new Handler(this);
+	
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_who_called);
 		
 		app =(WhoCalledApp) getApplication();
+		prefs = app.getPrefs();
 		ListView myListView = (ListView)this.findViewById(R.id.WhoCalledList);
 		progressDialog = new ProgressDialog(this);
 		progressDialog.setMax(2);
@@ -99,44 +103,101 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		myStatisticAdapter = new StatisticAdapter(statistics);		
 		myListView.setAdapter(myStatisticAdapter);
 		
-		SharedPreferences prefs = app.getPrefs();
-		Log.d(LOGGING_TAG, "IS_INITIAL_FLAG = " + Boolean.toString(!prefs.getBoolean(IS_INITIAL_FLAG, false)));
+		orderByColumn = prefs.getString(ORDER_BY, ORDER_BY_CALLCOUNTS);
+		
+		Log.i("REFRESH",String.valueOf(!prefs.getBoolean(IS_INITIAL_FLAG, false)));
 		if(!prefs.getBoolean(IS_INITIAL_FLAG, false)){
 			new PrepareTask().execute();
-		}else{
+		}else{		
 			resetListItems(getListDisplayData());
 		}	
 	}
 	
+	@Override
+	public void onPause() {
+		if (progressDialog.isShowing()) {
+			progressDialog.dismiss();
+		}
+		super.onPause();
+	}
+
+	 @Override
+	public boolean onCreateOptionsMenu(Menu menu){
+		super.onCreateOptionsMenu(menu);
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.who_called, menu);
+		return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item){
+			 
+		switch (item.getItemId()){
+			case R.id.duration:
+				orderByColumn = ORDER_BY_DURATON;
+				setStringValueToSharedPreferences(ORDER_BY,ORDER_BY_DURATON);
+				newstatistics = getListDisplayData();
+				resetListItems(newstatistics);
+				break;
+			case R.id.counts:
+				orderByColumn = ORDER_BY_CALLCOUNTS;
+				setStringValueToSharedPreferences(ORDER_BY,ORDER_BY_CALLCOUNTS);
+				newstatistics = getListDisplayData();
+				resetListItems(newstatistics);
+				break;
+		}	
+		return true;
+	}
+	
 	public boolean handleMessage(Message msg) {
-		String text = msg.getData().getString(IS_INITIAL_COMPLETE_FLAG);
-		if(text == INITIAL_COMPLETE_MESSAGE){
-			resetListItems(newstatistics);
+		
+		switch (msg.getData().getInt(MESSAGE_FLAG)){
+			case INITIAL_COMPLETE_MESSAGE:
+				Log.i("REFRESH","INITIAL_COMPLETE_MESSAGE ");
+				orderByColumn = prefs.getString(ORDER_BY, ORDER_BY_CALLCOUNTS);
+				resetListItems(newstatistics);
+				break;
+			case ORDER_BY_CHANGED:
+			//	orderByColumn = prefs.getString(ORDER_BY, ORDER_BY_CALLCOUNTS);
+			//	newstatistics = getListDisplayData();
+			//	resetListItems(newstatistics);
+				break;			
+			default:
+				break;
 		}
 		return true;
 	}
 	
 	private void resetListItems(List<Statistic> newstatistics) {
+		Log.i("REFRESH","refresh UI");
+		Log.i("REFRESH","orderByColumn :" + orderByColumn);
 		statistics.clear();
 		statistics.addAll(newstatistics);
 		myStatisticAdapter.notifyDataSetChanged();
 	}
+		
+	private void setBooleanValueToSharedPreferences(String Key, Boolean bool) {
+
+		Editor editor = prefs.edit();
+		editor.putBoolean(Key, bool);
+		editor.commit();
+	}
+	
+	private void setStringValueToSharedPreferences(String Key, String str) {
+
+		Editor editor = prefs.edit();
+		editor.putString(Key, str);
+		editor.commit();
+	}
 	
 	private class PrepareTask extends AsyncTask<Void, Integer, Integer> {
 		
-		private void sendMessage(String what) {
+		private void sendMessage(int what) {
 			Bundle bundle = new Bundle();
-			bundle.putString(IS_INITIAL_COMPLETE_FLAG, what);
+			bundle.putInt(MESSAGE_FLAG, what);
 			Message message = new Message();
 			message.setData(bundle);
 			handler.sendMessage(message);		
-		}
-		
-		private void setBooleanValueToSharedPreferences(String Key, Boolean bool) {
-			SharedPreferences prefs = app.getPrefs();
-	 		Editor editor = prefs.edit();
-	 		editor.putBoolean(Key, true);
-	 		editor.commit();
 		}
 		
 		@Override
@@ -149,6 +210,7 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		@Override
 		protected Integer doInBackground(Void... args) {
 			publishProgress(1);
+			Log.i("REFRESH","StoreCallLogsFromQurey+ getStatisticFromRecords + getListDisplayData");
 			app.StoreCallLogsFromQurey(WhoCalledActivity.this);
 	 		app.getStatisticFromRecords();
 	 		newstatistics = getListDisplayData();
@@ -171,26 +233,12 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		}
 	 }
 	
-	@Override
-	public void onPause() {
-		if (progressDialog.isShowing()) {
-			progressDialog.dismiss();
-		}
-		super.onPause();
-	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.who_called, menu);
-		return true;
-	}
-	
 private List<Statistic>getStatistics(){
 		
 		List<Statistic> result = null;
 		try {
-			result = app.getOrmLiteHelper().getStatisticDao().queryBuilder().orderBy("callduration",false).query();
+			result = app.getOrmLiteHelper().getStatisticDao().queryBuilder().orderBy(this.orderByColumn,false).query();
 		}catch (SQLException e) {
 			Log.d(LOGGING_TAG, "writing CallRecord reading to database failed");
 			e.printStackTrace();
@@ -265,7 +313,8 @@ private List<Statistic>getStatistics(){
 				ave.setText(String.valueOf(statistic.getCallaverage()));
 				Bitmap bitmap = app.getImageCache().get(statistic.get_id());
 				if (bitmap != null) {
-				image.setImageBitmap(bitmap);
+					Log.i("Image cache", "Image Found in cache");
+					image.setImageBitmap(bitmap);
 				} else {
 					if(getDisplayImageBaseOnContactId(statistic.getContacturi()) != null){
 						image.setImageBitmap(getDisplayImageBaseOnContactId(statistic.getContacturi()));

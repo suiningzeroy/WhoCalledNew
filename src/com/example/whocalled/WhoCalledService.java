@@ -27,6 +27,7 @@ public class WhoCalledService  extends Service {
 
 	private static final String LOCK_TAG = "whocalled service";
 	public static final long ONE_DAY = 24 * 60 * 1000;
+	public static final long MORE_THAN_ONE_DAY = 10 * 24 * 60 * 1000;
 	
 	private String LOGGING_TAG = "whocalled service";;
 	
@@ -77,8 +78,7 @@ public class WhoCalledService  extends Service {
 		releaseLock();
 	}
 	
-	private boolean isTodaysDataPrepare(){
-		Log.i(LOGGING_TAG, "isTodaysDataPrepare");
+	private long getMaxCallDateInStore() {
 		Statistic st = new Statistic();
 		
 		try{
@@ -90,20 +90,26 @@ public class WhoCalledService  extends Service {
 			e.printStackTrace();
 		}
 		
+		if(st != null){
+			return st.getStatisticdate();
+		}else{
+			return MORE_THAN_ONE_DAY;
+		}
+	} 
+	
+	private boolean isTodaysDataPrepare(){
+		Log.i(LOGGING_TAG, "isTodaysDataPrepare");
+		
+		long maxCallDateInStore = getMaxCallDateInStore();
 		Date now = new Date();
 		
-		if(st != null){
-			if( now.getTime() - st.getStatisticdate() < 60000 ){
+			if( now.getTime() - maxCallDateInStore < ONE_DAY ){
 				Log.i(LOGGING_TAG, "true");
 				return true;
 			}else{
-				Log.i(LOGGING_TAG, "now - getStatisticdate< 60000");
+				Log.i(LOGGING_TAG, "now - getStatisticdate > ONE_DAY");
 				return false;				
 			}
-		}else{
-			Log.i(LOGGING_TAG, "st is null");
-			return false;			
-		}
 	}
 	
 	private void prepareStatistic(){

@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
-    <item android:id="@+id/bookshelf"
-        android:title="@string/bookshelf" >
+    <item android:id="@+id/orderby"
+        android:title="@string/orderby" >
     <menu>
-        <item android:id="@+id/non_fiction"
-            android:title="@string/non_fiction"/>
-        <item android:id="@+id/fiction"
-            android:title="@string/fiction"/>
+        <item android:id="@+id/duration"
+            android:title="@string/duration"/>
+        <item android:id="@+id/counts"
+            android:title="@string/counts"/>
     </menu>
     </item>
-    <item android:id="@+id/bookonline"
-        android:title="@string/bookonline" />
+
 </menu>
