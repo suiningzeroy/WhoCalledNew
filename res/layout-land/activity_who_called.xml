@@ -1,0 +1,63 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/WhoCalled"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context=".WhoCalledActivity" >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+        <TextView
+        android:id="@+id/userImagetitle"
+        android:layout_width="50dp"
+		android:layout_height="wrap_content" 
+		android:layout_margin="5dp"/>
+    
+    <TextView
+        android:id="@+id/nameTitle"
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Name" />
+
+    <TextView
+        android:id="@+id/numberTitle"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Number" />
+
+    <TextView
+        android:id="@+id/durationTitle"
+        android:layout_width="140dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="Duration" />
+    
+	<TextView
+	    android:id="@+id/countsTitle"
+	    android:layout_width="100dp"
+	    android:layout_height="wrap_content"
+	    android:gravity="center"
+	    android:text="Counts" />
+
+	<TextView
+	    android:id="@+id/average_durationTitle"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:text="Ave" />
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/WhoCalledList"
+        android:layout_width="fill_parent"
+        android:layout_height="match_parent" >
+    </ListView>
+    
+</LinearLayout>
