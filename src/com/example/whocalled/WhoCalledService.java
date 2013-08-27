@@ -26,8 +26,6 @@ import android.util.Log;
 public class WhoCalledService  extends Service {
 
 	private static final String LOCK_TAG = "whocalled service";
-	public static final long ONE_DAY = 24 * 60 * 1000;
-	public static final long MORE_THAN_ONE_DAY = 10 * 24 * 60 * 1000;
 	
 	private String LOGGING_TAG = "whocalled service";;
 	
@@ -64,7 +62,7 @@ public class WhoCalledService  extends Service {
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		Log.i(LOGGING_TAG, "onStartCommand");		
-		if(!isTodaysDataPrepare()){
+		if(!app.isTodaysDataPrepare()){
 			Log.i(LOGGING_TAG, "prepareStatistic");
 			prepareStatistic();
 		}
@@ -78,45 +76,11 @@ public class WhoCalledService  extends Service {
 		releaseLock();
 	}
 	
-	private long getMaxCallDateInStore() {
-		Statistic st = new Statistic();
-		
-		try{
-			QueryBuilder<Statistic, Integer> queryBuilder =
-					app.getOrmLiteHelper().getStatisticDao().queryBuilder();
-			PreparedQuery<Statistic> preparedQuery = queryBuilder.prepare();
-			st = app.getOrmLiteHelper().getStatisticDao().queryForFirst(preparedQuery);
-		}catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-		if(st != null){
-			return st.getStatisticdate();
-		}else{
-			return MORE_THAN_ONE_DAY;
-		}
-	} 
-	
-	private boolean isTodaysDataPrepare(){
-		Log.i(LOGGING_TAG, "isTodaysDataPrepare");
-		
-		long maxCallDateInStore = getMaxCallDateInStore();
-		Date now = new Date();
-		
-			if( now.getTime() - maxCallDateInStore < ONE_DAY ){
-				Log.i(LOGGING_TAG, "true");
-				return true;
-			}else{
-				Log.i(LOGGING_TAG, "now - getStatisticdate > ONE_DAY");
-				return false;				
-			}
-	}
-	
 	private void prepareStatistic(){
 		acquireLock(this);
 		Log.i(LOGGING_TAG, "Start Refresh Data");	
-		app.StoreCallLogsFromQurey(this);
-		app.getStatisticFromRecords();
+		app.StoreCallLogsFromQurey(this,null,null);
+		app.storeStatisticFromRecordsToTable();
 		SharedPreferences prefs = app.getPrefs();
 		Editor editor = prefs.edit();
 		editor.putBoolean("IS_PREPARED", true);

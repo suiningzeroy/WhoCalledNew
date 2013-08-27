@@ -1,6 +1,8 @@
 package com.example.whocalled;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +12,8 @@ import com.example.whocalled.model.Contact;
 import com.example.whocalled.model.Statistic;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.GenericRawResults;
+import com.j256.ormlite.stmt.PreparedQuery;
+import com.j256.ormlite.stmt.QueryBuilder;
 
 import android.app.Application;
 import android.content.Context;
@@ -23,10 +27,14 @@ import android.util.Log;
 
 public class WhoCalledApp extends Application {
 	
+	public static final long ONE_DAY = 24 * 60 * 60 * 1000;
+	public static final long MORE_THAN_ONE_DAY = 3 * 24 * 60 * 60 * 1000;
+	
 	private String LOGGING_TAG = "WhoCalled Application";
 	private WhoCalledOrmLiteHelper ormLiteHelper;
 	private Map<Long, Bitmap> imageCache;
 	private SharedPreferences prefs;
+	
 	
 	public WhoCalledOrmLiteHelper getOrmLiteHelper() {
 		if (ormLiteHelper == null) {
@@ -103,8 +111,6 @@ public class WhoCalledApp extends Application {
 		}
 	}
 
-
-	
 	public Contact getContactBaseOnPhoneNumber(String phoneNumber){
 		List<Contact> names = null;
 		Contact nullContact = new Contact();
@@ -124,6 +130,14 @@ public class WhoCalledApp extends Application {
 	}
 	
 	public void wirteDataToStatistcTable(String sampledate,String[] input) {		
+		
+		Statistic statistic = new Statistic();		
+		statistic = getStatistcBaseOnArray(sampledate,input);
+
+		insertToStatistics(statistic);	
+	}
+	
+	public Statistic getStatistcBaseOnArray(String sampledate,String[] input) {		
 		Contact currentContact = getContactBaseOnPhoneNumber(input[0]);
 		
 		Statistic statistic = new Statistic();		
@@ -134,31 +148,39 @@ public class WhoCalledApp extends Application {
 		statistic.setStatisticdate(Long.valueOf(sampledate));
 		statistic.setContacturi(currentContact.getContactId());
 		statistic.setUsername(currentContact.getContactname());
+		
+		return statistic;
 
-		insertToStatistics(statistic);	
 	}
 	
-	public String getSampleDateOfCurrentStatistic(){
+	public String getStatisticDateOfCurrentStatistic(){
 		
-		String sampleDate = "";
+		String statisticdate = "";
 		try{
 			GenericRawResults<String[]> maxdateResults =
 				getOrmLiteHelper().getCallRecordDao().queryRaw(
-					"select max(calldate) as sampledate from CallRecorder ");
+					"select max(statisticdate) as sampledate from Statistic ");
 
 			for (String[] maxdateResult : maxdateResults) {
-				sampleDate = maxdateResult[0];
+				statisticdate = maxdateResult[0];
 		}
 		}catch (SQLException e){
 				e.printStackTrace();
 		}
 		
-		Log.d(LOGGING_TAG, "SampleDate is :" + sampleDate);
+		Log.d(LOGGING_TAG, "statisticdate is :" + statisticdate);
 		
-		return sampleDate;
+		return statisticdate;
 	}
 	
-	public void getStatisticFromRecords(){		
+	public String getSampleDateOfCurrentStatistic(){
+		Date now = new Date();
+		long statisticSampleDateInLong = now.getTime();
+		
+		return Long.toString(statisticSampleDateInLong);
+	}
+	
+	public void storeStatisticFromRecordsToTable(){		
 		
 		String sampleDate = getSampleDateOfCurrentStatistic();
 		
@@ -184,6 +206,7 @@ public class WhoCalledApp extends Application {
 		clearCallRecordTable();
 		Log.d(LOGGING_TAG, "statistic table is prepared!");
 	}
+
 //------------------------------------------------------------------------------//
 	public void insertRecordToCallrecords(CallRecord callRecord){
 		try {
@@ -207,21 +230,97 @@ public class WhoCalledApp extends Application {
 		Log.d(LOGGING_TAG, "StoreTheCallLogToTable!");
 		cursor.moveToFirst();
 		
-		while(cursor.moveToNext()) {
+		do {
 			String phoneNumber = cursor.getString(cursor.getColumnIndex(CallLog.Calls.NUMBER));
 			Long du = cursor.getLong(cursor.getColumnIndex(CallLog.Calls.DURATION));
 			Long numberDate = cursor.getLong(cursor.getColumnIndex(CallLog.Calls.DATE));
 			wirteDataToCallRecordTable(phoneNumber,numberDate,du);
+		}while(cursor.moveToNext()) ;
+	}
+	
+	private Statistic queryStatisticBasedOnPhoneNumber(String phoneNumber){
+		Statistic result = null;
+		List<Statistic> resultList = null;
+		try {
+			resultList = getOrmLiteHelper().getStatisticDao().queryBuilder().where().eq("phonenumber", phoneNumber).query();
+		}catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		if(resultList.size() ==0){
+			return result;
+		}else{
+			return resultList.get(0);
 		}
 	}
 	
-	public void StoreCallLogsFromQurey(Context context){
+	private int updateStatistic(Statistic statistic){
+		int result = 0;
+		try {
+			result = getOrmLiteHelper().getStatisticDao().update(statistic);
+		}catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return result;
+	}
+	
+	public void updateStatisticUse(Cursor cursor) {
+		
+		Log.d(LOGGING_TAG, "updateStatisticUse!");
+		cursor.moveToFirst();
+		
+		do {
+			Statistic result = new Statistic();
+			Statistic resultForUpdate = new Statistic();
+			String phoneNumber = cursor.getString(cursor.getColumnIndex(CallLog.Calls.NUMBER));
+			Long du = cursor.getLong(cursor.getColumnIndex(CallLog.Calls.DURATION));
+			Long numberDate = cursor.getLong(cursor.getColumnIndex(CallLog.Calls.DATE));
+			resultForUpdate = queryStatisticBasedOnPhoneNumber(phoneNumber);
+			if(resultForUpdate != null){
+				resultForUpdate.setCallcounts(resultForUpdate.getCallcounts()+1);
+				resultForUpdate.setCallduration(resultForUpdate.getCallduration()+ du);
+				resultForUpdate.setCallaverage(resultForUpdate.getCallduration()/resultForUpdate.getCallcounts());
+				resultForUpdate.setStatisticdate(numberDate);
+				updateStatistic(resultForUpdate);
+			}
+			else{
+				result.setPhonenumber(phoneNumber);
+				result.setCallcounts(1);
+				result.setCallduration(du);
+				result.setCallaverage(du);
+				result.setStatisticdate(numberDate);
+				insertToStatistics(result);
+			}
+			
+			
+		}while(cursor.moveToNext()) ;
+	}
+	
+	public void StoreCallLogsFromQurey(Context context,String selection, String[] arg){
 		
 		Log.d(LOGGING_TAG, "StoreCallLogsFromQurey!");
+		//Log.d(LOGGING_TAG, "sql is!" + "select * from calls where " + selection + " > " + arg[0]);
 		Cursor cursor = context.getContentResolver().query(CallLog.Calls.CONTENT_URI,
-				null, null, null, CallLog.Calls.DEFAULT_SORT_ORDER);
-		
+				null, selection, arg, CallLog.Calls.DEFAULT_SORT_ORDER);
+		Log.d(LOGGING_TAG, "cursor " + String.valueOf(cursor.getCount()));
 		StoreTheCallLogToTable(cursor);
+		cursor.close();
+	}
+	
+	public void StoreAddedCallLogsFromQurey(Context context,String selection, String[] arg){
+		
+		Log.d(LOGGING_TAG, "StoreCallLogsFromQurey!");
+		//Log.d(LOGGING_TAG, "sql is!" + "select * from calls where " + selection + " > " + arg[0]);
+		Cursor cursor = context.getContentResolver().query(CallLog.Calls.CONTENT_URI,
+				null, selection, arg, CallLog.Calls.DEFAULT_SORT_ORDER);
+		Log.d(LOGGING_TAG, "added cursor !" + String.valueOf(cursor.getCount()));
+		//StoreTheCallLogToTable
+		if (cursor != null & cursor.getCount() != 0){
+			updateStatisticUse(cursor);
+		}else{
+			Log.d(LOGGING_TAG, "cursor is null!");
+		}
 		
 		cursor.close();
 	}
@@ -268,5 +367,39 @@ public class WhoCalledApp extends Application {
 			e.printStackTrace();
 		}
 	}
+	
+	public long getMaxCallDateInStore() {
+		Statistic st = new Statistic();
+		
+		try{
+			QueryBuilder<Statistic, Integer> queryBuilder =
+					getOrmLiteHelper().getStatisticDao().queryBuilder();
+			PreparedQuery<Statistic> preparedQuery = queryBuilder.prepare();
+			st = getOrmLiteHelper().getStatisticDao().queryForFirst(preparedQuery);
+		}catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		return st.getStatisticdate();
+	
+	} 
+	
+	public boolean isTodaysDataPrepare(){
+		Log.i(LOGGING_TAG, "isTodaysDataPrepare");
+		
+		long StatisticDate = Long.valueOf(getStatisticDateOfCurrentStatistic());
+		Date now = new Date();
+		
+		Log.i(LOGGING_TAG, "now: " + now.toString() + " | " + Long.toString(now.getTime()));
+		Log.i(LOGGING_TAG, "maxCallDateInStore: " + Long.toString(StatisticDate));
+			if( now.getTime() - StatisticDate < ONE_DAY ){
+				Log.i(LOGGING_TAG, "true");
+				return true;
+			}else{
+				Log.i(LOGGING_TAG, "now - getStatisticdate > ONE_DAY " + Long.toString(now.getTime() - StatisticDate));
+				return false;				
+			}
+	}
+	
 
 }

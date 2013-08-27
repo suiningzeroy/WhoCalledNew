@@ -56,7 +56,6 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 	private final String  IS_INITIAL_FLAG = "IsIntial";
 	private final String ORDER_BY_DURATON = "callduration";
 	private final String ORDER_BY_CALLCOUNTS = "callcounts";
-	private final String ORDER_BY_AVEDURATON = "callaverage";
 	private final String ORDER_BY = "Order_By";
 	
   
@@ -85,18 +84,18 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		progressDialog.setCancelable(false);
 		progressDialog.setMessage(getString(R.string.prepare));
 		
-		Button startService = (Button) findViewById(R.id.startService);		
+		/*Button startService = (Button) findViewById(R.id.startService);		
 		
 		startService.setOnClickListener(new OnClickListener(){
 			@Override
 			public void onClick(View v) {				
 				Log.d(LOGGING_TAG, "button click");
 		 		myStatisticAdapter.notifyDataSetChanged();
-				//Intent intent = new Intent(myACTION);
-				//sendBroadcast(intent);
+				Intent intent = new Intent(myACTION);
+				sendBroadcast(intent);
 			}
 			
-		});
+		});*/
 
 		app.contactDeals(this);
 		statistics = new ArrayList<Statistic>();
@@ -169,7 +168,6 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 	}
 	
 	private void resetListItems(List<Statistic> newstatistics) {
-		Log.i("REFRESH","refresh UI");
 		Log.i("REFRESH","orderByColumn :" + orderByColumn);
 		statistics.clear();
 		statistics.addAll(newstatistics);
@@ -211,14 +209,14 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		protected Integer doInBackground(Void... args) {
 			publishProgress(1);
 			Log.i("REFRESH","StoreCallLogsFromQurey+ getStatisticFromRecords + getListDisplayData");
-			app.StoreCallLogsFromQurey(WhoCalledActivity.this);
-	 		app.getStatisticFromRecords();
-	 		newstatistics = getListDisplayData();
-	 		app.releaseOrmLiteHelper();
-	 		setBooleanValueToSharedPreferences(IS_INITIAL_FLAG,true);
-	 		sendMessage(INITIAL_COMPLETE_MESSAGE);
+			app.StoreCallLogsFromQurey(WhoCalledActivity.this,null,null);
+			app.storeStatisticFromRecordsToTable();
+			newstatistics = getListDisplayData();
+			app.releaseOrmLiteHelper();
+			setBooleanValueToSharedPreferences(IS_INITIAL_FLAG,true);
+			sendMessage(INITIAL_COMPLETE_MESSAGE);
 			publishProgress(2);
-			 return 0;
+			return 0;
 		}
 
 		@Override
@@ -234,7 +232,7 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 	 }
 	
 
-private List<Statistic>getStatistics(){
+private List<Statistic> getStatistics(){
 		
 		List<Statistic> result = null;
 		try {
@@ -270,21 +268,28 @@ private List<Statistic>getStatistics(){
 			return image;
 		}
 	}
+	
 	private List<Statistic> getListDisplayData(){
-		List<Statistic> statistics = getStatistics();
+		Log.i("getListDisplayData","getListDisplayData");
 		
-		return statistics;
+		String selection = CallLog.Calls.DATE + " > ?";
+		String[] arg = {String.valueOf(app.getStatisticDateOfCurrentStatistic())};		
+		app.StoreAddedCallLogsFromQurey(this,selection,arg);
+		List<Statistic> reservedStatistics = getStatistics();
+		
+		return reservedStatistics;
 	}
 	
 	private class StatisticAdapter extends ArrayAdapter<Statistic> {
 		
-		private ThreadPoolExecutor executor =
-				(ThreadPoolExecutor) Executors.newFixedThreadPool(5);
-		
-		
-		
 		public StatisticAdapter(List<Statistic> statistics) {
 			super(WhoCalledActivity.this, R.layout.list_item, statistics);
+		}
+		
+		private void imageStoreInCache(ImageView imageView, Bitmap bitmap) {
+			if (bitmap != null) {
+				app.getImageCache().put((Long) imageView.getTag(), bitmap);
+			}
 		}
 	
 		 @Override
@@ -313,10 +318,10 @@ private List<Statistic>getStatistics(){
 				ave.setText(String.valueOf(statistic.getCallaverage()));
 				Bitmap bitmap = app.getImageCache().get(statistic.get_id());
 				if (bitmap != null) {
-					Log.i("Image cache", "Image Found in cache");
 					image.setImageBitmap(bitmap);
-				} else {
+				}else {
 					if(getDisplayImageBaseOnContactId(statistic.getContacturi()) != null){
+						image.setTag(statistic.get_id());
 						image.setImageBitmap(getDisplayImageBaseOnContactId(statistic.getContacturi()));
 						imageStoreInCache(image,getDisplayImageBaseOnContactId(statistic.getContacturi()));
 					}
@@ -358,13 +363,5 @@ private List<Statistic>getStatistics(){
 			}
 		}
 	}
-	
-	private void imageStoreInCache(ImageView imageView, Bitmap bitmap) {
-		if (bitmap != null) {
-
-			app.getImageCache().put((Long) imageView.getTag(), bitmap);
-		}
-	}
-	
 
 }

@@ -11,8 +11,8 @@ import android.util.Log;
 
 public class WhoCalledStartUpReceiver extends BroadcastReceiver {
 
-	private static final int INITIAL_DELAY_IN_MINUTES = 5;
-	public static final int SAMPLING_INTERVAL_IN_MILLIS = 24* 60 * 1000;
+	private static final int INITIAL_DELAY_IN_MINUTES = 1;
+	public static final int SAMPLING_INTERVAL_IN_MILLIS = 2* 60 * 1000;
 	public static final String LOGGING_TAG = "WhoCalled StartUpReceiver";
 	
 	@Override
