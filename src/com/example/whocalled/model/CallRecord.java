@@ -1,7 +1,4 @@
-package com.example.whocalled;
-
-
-import java.util.Date;
+package com.example.whocalled.model;
 
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;

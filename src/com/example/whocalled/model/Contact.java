@@ -1,4 +1,4 @@
-package com.example.whocalled;
+package com.example.whocalled.model;
 
 
 import java.util.Date;
@@ -15,7 +15,7 @@ public class Contact {
 	@DatabaseField(canBeNull = true)
 	private String contactname;
 	@DatabaseField(canBeNull = true)
-	private long contactId;
+	private String contactId;
 	public String getPhonenumber() {
 		return phonenumber;
 	}
@@ -28,10 +28,10 @@ public class Contact {
 	public void setContactname(String contactname) {
 		this.contactname = contactname;
 	}
-	public long getContactId() {
+	public String getContactId() {
 		return contactId;
 	}
-	public void setContactId(long contactId) {
+	public void setContactId(String contactId) {
 		this.contactId = contactId;
 	}
 }

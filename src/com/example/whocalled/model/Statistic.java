@@ -1,4 +1,4 @@
-package com.example.whocalled;
+package com.example.whocalled.model;
 
 
 import com.j256.ormlite.field.DatabaseField;
@@ -7,7 +7,7 @@ import com.j256.ormlite.table.DatabaseTable;
 @DatabaseTable(tableName = "Statistic")
 public class Statistic {
 	@DatabaseField(generatedId = true)
-	private int _id;
+	private long _id;
 	
 	@DatabaseField(canBeNull = false)
 	private String phonenumber;
@@ -29,6 +29,7 @@ public class Statistic {
 	
 	@DatabaseField(canBeNull = true)
 	private long statisticdate;
+	
 	
 	public Statistic() {}
 
@@ -87,6 +88,11 @@ public class Statistic {
 	public void setStatisticdate(long statisticdate) {
 		this.statisticdate = statisticdate;
 	}
+
+	public long get_id() {
+		return _id;
+	}
+
 	
 	
 }

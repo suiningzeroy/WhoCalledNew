@@ -7,6 +7,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
 
+import com.example.whocalled.model.CallRecord;
+import com.example.whocalled.model.Contact;
+import com.example.whocalled.model.Statistic;
 import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.dao.RuntimeExceptionDao;
@@ -72,6 +75,16 @@ public class WhoCalledOrmLiteHelper  extends OrmLiteSqliteOpenHelper {
 		}
 	}
 	
+	public void dropCallTable(){
+		try {
+			Log.i(WhoCalledOrmLiteHelper.class.getName(), "onUpgrade");
+			TableUtils.dropTable(connectionSource, CallRecord.class, true);
+		} catch (SQLException e) {
+			Log.e(WhoCalledOrmLiteHelper.class.getName(), "Can't drop CallTable", e);
+			throw new RuntimeException(e);
+		}
+	}
+	
 	public Dao<Statistic, Integer> getStatisticDao() throws SQLException {
 		if (statisticDao == null) {
 			statisticDao = getDao(Statistic.class);
@@ -99,6 +112,7 @@ public class WhoCalledOrmLiteHelper  extends OrmLiteSqliteOpenHelper {
 		}
 		return statisticRuntimeDao;
 	}
+	
 
 	/**
 	* Close the database connections and clear any cached DAOs.
