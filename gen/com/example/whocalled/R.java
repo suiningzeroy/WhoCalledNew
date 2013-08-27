@@ -32,15 +32,21 @@ public final class R {
     }
     public static final class id {
         public static final int WhoCalled=0x7f090000;
-        public static final int WhoCalledList=0x7f090001;
-        public static final int average_duration=0x7f090008;
-        public static final int counts=0x7f090007;
-        public static final int duration=0x7f090006;
-        public static final int l=0x7f090002;
-        public static final int name=0x7f090004;
-        public static final int number=0x7f090005;
-        public static final int orderby=0x7f090009;
-        public static final int userImage=0x7f090003;
+        public static final int WhoCalledList=0x7f090007;
+        public static final int average_duration=0x7f09000e;
+        public static final int average_durationTitle=0x7f090006;
+        public static final int counts=0x7f09000d;
+        public static final int countsTitle=0x7f090005;
+        public static final int duration=0x7f09000c;
+        public static final int durationTitle=0x7f090004;
+        public static final int l=0x7f090008;
+        public static final int name=0x7f09000a;
+        public static final int nameTitle=0x7f090002;
+        public static final int number=0x7f09000b;
+        public static final int numberTitle=0x7f090003;
+        public static final int orderby=0x7f09000f;
+        public static final int userImage=0x7f090009;
+        public static final int userImagetitle=0x7f090001;
     }
     public static final class layout {
         public static final int activity_who_called=0x7f030000;

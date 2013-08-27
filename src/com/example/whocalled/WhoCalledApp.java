@@ -120,8 +120,7 @@ public class WhoCalledApp extends Application {
 		}catch (SQLException e) {
 			Log.d(LOGGING_TAG, "writing CallRecord reading to database failed");
 			e.printStackTrace();
-		}
-		
+		}		
 		if(names.size()==0){
 			return nullContact;
 		}else{
@@ -160,7 +159,6 @@ public class WhoCalledApp extends Application {
 			GenericRawResults<String[]> maxdateResults =
 				getOrmLiteHelper().getCallRecordDao().queryRaw(
 					"select max(statisticdate) as sampledate from Statistic ");
-
 			for (String[] maxdateResult : maxdateResults) {
 				statisticdate = maxdateResult[0];
 		}
@@ -187,7 +185,6 @@ public class WhoCalledApp extends Application {
 		clearStatisticTable();
 		
 		try{
-			// return the orders with the sum of their amounts per account
 			GenericRawResults<String[]> rawResults =
 				getOrmLiteHelper().getCallRecordDao().queryRaw(
 						"select phonenumber,count(_id) as counts, sum(callduration) as sumdu, sum(callduration)/count(_id) as ave from " +
@@ -202,7 +199,6 @@ public class WhoCalledApp extends Application {
 			e.printStackTrace();
 		
 		}		
-
 		clearCallRecordTable();
 		Log.d(LOGGING_TAG, "statistic table is prepared!");
 	}
@@ -265,7 +261,7 @@ public class WhoCalledApp extends Application {
 		return result;
 	}
 	
-	public void updateStatisticUse(Cursor cursor) {
+	public void updateStatisticUseAddedCallLog(Cursor cursor) {
 		
 		Log.d(LOGGING_TAG, "updateStatisticUse!");
 		cursor.moveToFirst();
@@ -291,9 +287,7 @@ public class WhoCalledApp extends Application {
 				result.setCallaverage(du);
 				result.setStatisticdate(numberDate);
 				insertToStatistics(result);
-			}
-			
-			
+			}			
 		}while(cursor.moveToNext()) ;
 	}
 	
@@ -310,25 +304,21 @@ public class WhoCalledApp extends Application {
 	
 	public void StoreAddedCallLogsFromQurey(Context context,String selection, String[] arg){
 		
-		Log.d(LOGGING_TAG, "StoreCallLogsFromQurey!");
-		//Log.d(LOGGING_TAG, "sql is!" + "select * from calls where " + selection + " > " + arg[0]);
 		Cursor cursor = context.getContentResolver().query(CallLog.Calls.CONTENT_URI,
 				null, selection, arg, CallLog.Calls.DEFAULT_SORT_ORDER);
 		Log.d(LOGGING_TAG, "added cursor !" + String.valueOf(cursor.getCount()));
-		//StoreTheCallLogToTable
+
 		if (cursor != null & cursor.getCount() != 0){
-			updateStatisticUse(cursor);
+			updateStatisticUseAddedCallLog(cursor);
 		}else{
 			Log.d(LOGGING_TAG, "cursor is null!");
-		}
-		
+		}		
 		cursor.close();
 	}
 	//-----------------------------------------------------
 	public void contactDeals(Context context) {
 		Cursor cursor= context.getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, 
-										null, null, null, null);
-		
+										null, null, null, null);		
 		Log.d(LOGGING_TAG, String.valueOf(cursor.getCount()));
 		clearContactTable();
 		StoreTheContactInfoToTable(context,cursor);
@@ -342,7 +332,6 @@ public class WhoCalledApp extends Application {
 			String id=cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));  
 			String name=cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));  
 			String phoneNumber=null;  
-			
 			
 			Cursor phones=context.getContentResolver()
 					 .query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, 
@@ -368,35 +357,14 @@ public class WhoCalledApp extends Application {
 		}
 	}
 	
-	public long getMaxCallDateInStore() {
-		Statistic st = new Statistic();
-		
-		try{
-			QueryBuilder<Statistic, Integer> queryBuilder =
-					getOrmLiteHelper().getStatisticDao().queryBuilder();
-			PreparedQuery<Statistic> preparedQuery = queryBuilder.prepare();
-			st = getOrmLiteHelper().getStatisticDao().queryForFirst(preparedQuery);
-		}catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-		return st.getStatisticdate();
-	
-	} 
-	
 	public boolean isTodaysDataPrepare(){
 		Log.i(LOGGING_TAG, "isTodaysDataPrepare");
 		
 		long StatisticDate = Long.valueOf(getStatisticDateOfCurrentStatistic());
 		Date now = new Date();
-		
-		Log.i(LOGGING_TAG, "now: " + now.toString() + " | " + Long.toString(now.getTime()));
-		Log.i(LOGGING_TAG, "maxCallDateInStore: " + Long.toString(StatisticDate));
 			if( now.getTime() - StatisticDate < ONE_DAY ){
-				Log.i(LOGGING_TAG, "true");
 				return true;
 			}else{
-				Log.i(LOGGING_TAG, "now - getStatisticdate > ONE_DAY " + Long.toString(now.getTime() - StatisticDate));
 				return false;				
 			}
 	}
