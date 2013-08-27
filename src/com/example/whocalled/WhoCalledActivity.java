@@ -95,50 +95,17 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		});
 
 		app.contactDeals(this);
-
-	
-		
-		ListView myListView = (ListView)this.findViewById(R.id.WhoCalledList);
-	//	List<HashMap<String, Object>> data = new ArrayList<HashMap<String, Object>>();
-	//	data = getDisplayData();
-		
-		statistics =getListDisplayData();
-		myStatisticAdapter = new StatisticAdapter(statistics);
-		
+		statistics = new ArrayList<Statistic>();
+		myStatisticAdapter = new StatisticAdapter(statistics);		
 		myListView.setAdapter(myStatisticAdapter);
 		
-	/*	SimpleAdapter adapter = new SimpleAdapter(this, data,
-											R.layout.list_item,
-											new String[]{WhoCalledActivity.IMAGE,
-															WhoCalledActivity.NAME,
-															WhoCalledActivity.PHONE_NUMBER,
-															WhoCalledActivity.DURATION,
-															WhoCalledActivity.COUNTS,
-															WhoCalledActivity.AVERAGE_DURATION}, 
-											new int[]{R.id.userImage,R.id.name,R.id.number,
-													R.id.duration,R.id.counts,R.id.average_duration});
-		
-		adapter.setViewBinder(new ViewBinder() {
-
-			public boolean setViewValue(View view, Object data, String textRepresentation) {
-	
-				if(view instanceof ImageView&& data instanceof Bitmap){
-					ImageView iv = (ImageView) view;
-						iv.setImageBitmap((Bitmap) data);
-						return true;
-				}else
-					return false;
-				}
-		}); 
-		
-		myListView.setAdapter(adapter); */
-		
-		
 		SharedPreferences prefs = app.getPrefs();
+		Log.d(LOGGING_TAG, "IS_INITIAL_FLAG = " + Boolean.toString(!prefs.getBoolean(IS_INITIAL_FLAG, false)));
 		if(!prefs.getBoolean(IS_INITIAL_FLAG, false)){
 			new PrepareTask().execute();
-		}
-		
+		}else{
+			resetListItems(getListDisplayData());
+		}	
 	}
 	
 	public boolean handleMessage(Message msg) {
@@ -162,9 +129,16 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 			bundle.putString(IS_INITIAL_COMPLETE_FLAG, what);
 			Message message = new Message();
 			message.setData(bundle);
-			handler.sendMessage(message);
-		
+			handler.sendMessage(message);		
 		}
+		
+		private void setBooleanValueToSharedPreferences(String Key, Boolean bool) {
+			SharedPreferences prefs = app.getPrefs();
+	 		Editor editor = prefs.edit();
+	 		editor.putBoolean(Key, true);
+	 		editor.commit();
+		}
+		
 		@Override
 		protected void onPreExecute() {
 			if (progressDialog.isShowing()) {
@@ -172,20 +146,14 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 			}
 		}
 		
-		
-
 		@Override
 		protected Integer doInBackground(Void... args) {
-			 publishProgress(1);
+			publishProgress(1);
 			app.StoreCallLogsFromQurey(WhoCalledActivity.this);
 	 		app.getStatisticFromRecords();
-	 		newstatistics =getListDisplayData();
-	 		SharedPreferences prefs = app.getPrefs();
-	 		Editor editor = prefs.edit();
-	 		editor.putBoolean("IS_PREPARED", true);
-	 		editor.commit();
-	 		Log.i("PrepareTask","write IS_PREPARED SharedPreferences true");
+	 		newstatistics = getListDisplayData();
 	 		app.releaseOrmLiteHelper();
+	 		setBooleanValueToSharedPreferences(IS_INITIAL_FLAG,true);
 	 		sendMessage(INITIAL_COMPLETE_MESSAGE);
 			publishProgress(2);
 			 return 0;
@@ -259,24 +227,7 @@ private List<Statistic>getStatistics(){
 		
 		return statistics;
 	}
-	private List<HashMap<String, Object>> getDisplayData() {
-		List<HashMap<String, Object>> statisticMapList = new ArrayList<HashMap<String, Object>>();
-		List<Statistic> statistics = getStatistics();
-		
-		for(int i = 0; i< statistics.size(); i++){
-			HashMap<String, Object> statisticMap=new HashMap<String, Object>();
-			statisticMap.put(PHONE_NUMBER, statistics.get(i).getPhonenumber());
-			statisticMap.put(NAME, statistics.get(i).getUsername());
-			statisticMap.put(DURATION, String.valueOf(statistics.get(i).getCallduration()));
-			statisticMap.put(COUNTS, String.valueOf(statistics.get(i).getCallcounts()));
-			statisticMap.put(AVERAGE_DURATION, String.valueOf(statistics.get(i).getCallaverage()));			
-			statisticMap.put(IMAGE, getDisplayImageBaseOnContactId(statistics.get(i).getContacturi()));
-			//statisticMap.put(IMAGE,BitmapFactory.decodeResource(getResources(), R.drawable.ddicon));
-			statisticMapList.add(statisticMap);
-		}
-		
-		return statisticMapList;
-	}
+	
 	private class StatisticAdapter extends ArrayAdapter<Statistic> {
 		
 		private ThreadPoolExecutor executor =
@@ -316,8 +267,10 @@ private List<Statistic>getStatistics(){
 				if (bitmap != null) {
 				image.setImageBitmap(bitmap);
 				} else {
-					image.setImageBitmap(getDisplayImageBaseOnContactId(statistic.getContacturi()));
-					imageStoreInCache(image,getDisplayImageBaseOnContactId(statistic.getContacturi()));
+					if(getDisplayImageBaseOnContactId(statistic.getContacturi()) != null){
+						image.setImageBitmap(getDisplayImageBaseOnContactId(statistic.getContacturi()));
+						imageStoreInCache(image,getDisplayImageBaseOnContactId(statistic.getContacturi()));
+					}
 				//image.setTag(statistic.get_id());
 				// separate thread/via task, for retrieving each image
 				// (note that this is brittle as is, should stop all threads in onPause)	

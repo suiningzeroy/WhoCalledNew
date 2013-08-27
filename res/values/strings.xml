@@ -1,10 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?>
+getDisplayImageBaseOnContactId(statistic.getContacturi())<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
     <string name="app_name">WhoCalled</string>
     <string name="action_settings">Settings</string>
-    <string name="hello_world">Hello world!</string>
     <string name="service_name">WhoCalledService</string>
-    <string name="prepare">statistic preparing</string>
+    <string name="prepare">Initial Data at First Login</string>
+    
+    <string name="menu_update">Refresh Earthquakes</string>
+	<string name="auto_update_prompt">Auto Update?</string>
+	<string name="update_freq_prompt">Update Frequency</string>
+	<string name="min_quake_mag_prompt">Minimum Quake Magnitude</string>
+	<string name="menu_preferences">Preferences</string>
+	<string name="bookonline">aaa</string>
+	<string name="bookshelf">aaa</string>
+	<string name="non_fiction">aaa</string>
+	<string name="fiction">aaa</string>
 
 </resources>

@@ -29,7 +29,6 @@ public class WhoCalledApp extends Application {
 	private SharedPreferences prefs;
 	
 	public WhoCalledOrmLiteHelper getOrmLiteHelper() {
-		Log.d(LOGGING_TAG, " want to getOrmLiteHelper!");
 		if (ormLiteHelper == null) {
 			ormLiteHelper = OpenHelperManager.getHelper(this, WhoCalledOrmLiteHelper.class);
 			Log.d(LOGGING_TAG, "getOrmLiteHelper success!");
@@ -39,7 +38,6 @@ public class WhoCalledApp extends Application {
 	}
 	
 	public void releaseOrmLiteHelper() {
-		Log.d(LOGGING_TAG, " want to releaseOrmLiteHelper!");
 		if (ormLiteHelper != null) {
 			OpenHelperManager.releaseHelper();
 			ormLiteHelper = null;
@@ -66,7 +64,6 @@ public class WhoCalledApp extends Application {
 		try {
 			getOrmLiteHelper().getStatisticDao().create(staistic);
 		}catch (SQLException e) {
-			Log.d(LOGGING_TAG, "writing accelerometer reading to database failed");
 			e.printStackTrace();
 		}
 	}
@@ -126,10 +123,9 @@ public class WhoCalledApp extends Application {
 		}
 	}
 	
-	public void wirteDataToStatistcTable(String sampledate,String[] input) {
-		Log.d(LOGGING_TAG, "wirte Data To Statistc Table");
-		
+	public void wirteDataToStatistcTable(String sampledate,String[] input) {		
 		Contact currentContact = getContactBaseOnPhoneNumber(input[0]);
+		
 		Statistic statistic = new Statistic();		
 		statistic.setPhonenumber(input[0]);
 		statistic.setCallcounts(Long.valueOf(input[1]));
@@ -232,8 +228,10 @@ public class WhoCalledApp extends Application {
 	//-----------------------------------------------------
 	public void contactDeals(Context context) {
 		Cursor cursor= context.getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, 
-										null, null, null, null);  
+										null, null, null, null);
+		
 		Log.d(LOGGING_TAG, String.valueOf(cursor.getCount()));
+		clearContactTable();
 		StoreTheContactInfoToTable(context,cursor);
 		cursor.close();
 	}
@@ -247,7 +245,7 @@ public class WhoCalledApp extends Application {
 			String phoneNumber=null;  
 			
 			
-			 Cursor phones=context.getContentResolver()
+			Cursor phones=context.getContentResolver()
 					 .query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, 
 					 					ContactsContract.CommonDataKinds.Phone.CONTACT_ID+"="+id, null, null);
 			while (phones.moveToNext()) {  
@@ -257,7 +255,7 @@ public class WhoCalledApp extends Application {
 				contact.setContactname(name);
 				contact.setPhonenumber(phoneNumber);
 				insertToContact(contact);
-			}  
+			}
 			phones.close();
 			//Log.d(LOGGING_TAG," id ="+id+" ,name= "+name+" ,phone: "+phoneNumber);  
 		}
