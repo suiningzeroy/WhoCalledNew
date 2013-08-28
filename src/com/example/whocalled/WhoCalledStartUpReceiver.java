@@ -11,8 +11,8 @@ import android.util.Log;
 
 public class WhoCalledStartUpReceiver extends BroadcastReceiver {
 
-	private static final int INITIAL_DELAY_IN_MINUTES = 1;
-	public static final int SAMPLING_INTERVAL_IN_MILLIS = 2* 60 * 1000;
+	private static final int INITIAL_DELAY_IN_MINUTES = 2;
+	public static final int SAMPLING_INTERVAL_IN_MILLIS = 12 * 60 * 60 * 1000;
 	public static final String LOGGING_TAG = "WhoCalled StartUpReceiver";
 	
 	@Override
@@ -20,7 +20,7 @@ public class WhoCalledStartUpReceiver extends BroadcastReceiver {
 		Log.d(LOGGING_TAG,"recive intent");
 		AlarmManager alarmMgr = 
 				(AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-		Intent i = new Intent(context, AlarmReceiver.class);
+		Intent i = new Intent(context, WhoCalledAlarmReceiver.class);
 		PendingIntent sender = PendingIntent.getBroadcast(context, 0, 
 				i, PendingIntent.FLAG_CANCEL_CURRENT);
 		Calendar now = Calendar.getInstance();

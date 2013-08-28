@@ -79,15 +79,10 @@ public class WhoCalledService  extends Service {
 	private void prepareStatistic(){
 		acquireLock(this);
 		Log.i(LOGGING_TAG, "Start Refresh Data");	
-		app.StoreCallLogsFromQurey(this,null,null);
-		app.storeStatisticFromRecordsToTable();
-		SharedPreferences prefs = app.getPrefs();
-		Editor editor = prefs.edit();
-		editor.putBoolean("IS_PREPARED", true);
-		editor.commit();
+		app.storeCallLogsFromQureyToCallRecordTable(this,null,null);
+		app.storeStatisticsFromRecordsToStatisticTable();
 		app.releaseOrmLiteHelper();
 		releaseLock();
 	}
-	
 
 }

@@ -5,8 +5,6 @@
     <string name="action_settings">Settings</string>
     <string name="service_name">WhoCalledService</string>
     <string name="prepare">Initial Data at First Login</string>
-
-	<string name="somethingelse">Else</string>
 	<string name="orderby">Order By</string>
 	<string name="duration">Total Call Duration</string>
 	<string name="counts">Call Counts</string>

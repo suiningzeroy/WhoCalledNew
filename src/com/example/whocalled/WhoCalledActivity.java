@@ -52,18 +52,15 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 	private static final String LOGGING_TAG = "WhoCalled Activity";
 	public final String MESSAGE_FLAG = "MESSAGE_FLAG";
 	public final int INITIAL_COMPLETE_MESSAGE = 111;
-	public final int ORDER_BY_CHANGED = 222;
-	private final String  IS_INITIAL_FLAG = "IsIntial";
+	private final String  IS_INITIAL_FLAG = "Intial_Flag";
 	private final String ORDER_BY_DURATON = "callduration";
 	private final String ORDER_BY_CALLCOUNTS = "callcounts";
 	private final String ORDER_BY = "Order_By";
 	
-  
 	private String orderByColumn;
 	private SharedPreferences prefs;
 	private WhoCalledOrmLiteHelper ormLiteHelper;
 	private WhoCalledApp app;
-	public static final String myACTION="android.whocalled.Start";
 	private ProgressDialog progressDialog;
 	private StatisticAdapter myStatisticAdapter;
 	private List<Statistic> statistics;
@@ -78,37 +75,23 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		
 		app =(WhoCalledApp) getApplication();
 		prefs = app.getPrefs();
-		ListView myListView = (ListView)this.findViewById(R.id.WhoCalledList);
+		ListView statisticsListView = (ListView)this.findViewById(R.id.WhoCalledList);
 		progressDialog = new ProgressDialog(this);
 		progressDialog.setMax(2);
 		progressDialog.setCancelable(false);
 		progressDialog.setMessage(getString(R.string.prepare));
-		
-		/*Button startService = (Button) findViewById(R.id.startService);		
-		
-		startService.setOnClickListener(new OnClickListener(){
-			@Override
-			public void onClick(View v) {				
-				Log.d(LOGGING_TAG, "button click");
-		 		myStatisticAdapter.notifyDataSetChanged();
-				Intent intent = new Intent(myACTION);
-				sendBroadcast(intent);
-			}
-			
-		});*/
 
-		app.contactDeals(this);
+
+		app.storeUpToDateContactsInfoToContactTable(this);
 		statistics = new ArrayList<Statistic>();
 		myStatisticAdapter = new StatisticAdapter(statistics);		
-		myListView.setAdapter(myStatisticAdapter);
+		statisticsListView.setAdapter(myStatisticAdapter);
 		
-		orderByColumn = prefs.getString(ORDER_BY, ORDER_BY_CALLCOUNTS);
-		
-		Log.i("REFRESH",String.valueOf(!prefs.getBoolean(IS_INITIAL_FLAG, false)));
+		orderByColumn = prefs.getString(ORDER_BY, ORDER_BY_CALLCOUNTS);		;
 		if(!prefs.getBoolean(IS_INITIAL_FLAG, false)){
 			new PrepareTask().execute();
 		}else{		
-			resetListItems(getListDisplayData());
+			resetListItems(getStatisticsForAdapter());
 		}	
 	}
 	
@@ -135,13 +118,13 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 			case R.id.duration:
 				orderByColumn = ORDER_BY_DURATON;
 				setStringValueToSharedPreferences(ORDER_BY,ORDER_BY_DURATON);
-				newstatistics = getListDisplayData();
+				newstatistics = getStatisticsForAdapter();
 				resetListItems(newstatistics);
 				break;
 			case R.id.counts:
 				orderByColumn = ORDER_BY_CALLCOUNTS;
 				setStringValueToSharedPreferences(ORDER_BY,ORDER_BY_CALLCOUNTS);
-				newstatistics = getListDisplayData();
+				newstatistics = getStatisticsForAdapter();
 				resetListItems(newstatistics);
 				break;
 		}	
@@ -156,11 +139,6 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 				orderByColumn = prefs.getString(ORDER_BY, ORDER_BY_CALLCOUNTS);
 				resetListItems(newstatistics);
 				break;
-			case ORDER_BY_CHANGED:
-			//	orderByColumn = prefs.getString(ORDER_BY, ORDER_BY_CALLCOUNTS);
-			//	newstatistics = getListDisplayData();
-			//	resetListItems(newstatistics);
-				break;			
 			default:
 				break;
 		}
@@ -168,7 +146,6 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 	}
 	
 	private void resetListItems(List<Statistic> newstatistics) {
-		Log.i("REFRESH","orderByColumn :" + orderByColumn);
 		statistics.clear();
 		statistics.addAll(newstatistics);
 		myStatisticAdapter.notifyDataSetChanged();
@@ -208,10 +185,9 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		@Override
 		protected Integer doInBackground(Void... args) {
 			publishProgress(1);
-			Log.i("REFRESH","StoreCallLogsFromQurey+ getStatisticFromRecords + getListDisplayData");
-			app.StoreCallLogsFromQurey(WhoCalledActivity.this,null,null);
-			app.storeStatisticFromRecordsToTable();
-			newstatistics = getListDisplayData();
+			app.storeCallLogsFromQureyToCallRecordTable(WhoCalledActivity.this,null,null);
+			app.storeStatisticsFromRecordsToStatisticTable();
+			newstatistics = getStatisticsForAdapter();
 			app.releaseOrmLiteHelper();
 			setBooleanValueToSharedPreferences(IS_INITIAL_FLAG,true);
 			sendMessage(INITIAL_COMPLETE_MESSAGE);
@@ -232,8 +208,7 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 	 }
 	
 
-private List<Statistic> getStatistics(){
-		
+private List<Statistic> getStatisticsFromTable(){		
 		List<Statistic> result = null;
 		try {
 			result = app.getOrmLiteHelper().getStatisticDao().queryBuilder().orderBy(this.orderByColumn,false).query();
@@ -250,34 +225,29 @@ private List<Statistic> getStatistics(){
 		return result;
 	}
 	
-	private Bitmap getDisplayImageBaseOnContactId(String contactId){
+	private Bitmap getContactImageBaseOnContactId(String contactId){
 		Bitmap image = null;
 		
 		if(contactId == null){
-			//Log.d(LOGGING_TAG, "contactId is null");
 			image = BitmapFactory.decodeResource(getResources(), R.drawable.ddicon);
 			return image;
 		}else{
 			ContentResolver cr = getContentResolver(); 
 			Uri uri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, 
 					Long.parseLong(contactId)); 
-			//Log.d(LOGGING_TAG, uri.toString());
 			InputStream input = ContactsContract.Contacts.openContactPhotoInputStream(cr, uri); 
-			image = BitmapFactory.decodeStream(input); 
-		
+			image = BitmapFactory.decodeStream(input); 		
 			return image;
 		}
 	}
 	
-	private List<Statistic> getListDisplayData(){
-		Log.i("getListDisplayData","getListDisplayData");
-		
+	private List<Statistic> getStatisticsForAdapter(){
 		String selection = CallLog.Calls.DATE + " > ?";
-		String[] arg = {String.valueOf(app.getStatisticDateOfCurrentStatistic())};		
-		app.StoreAddedCallLogsFromQurey(this,selection,arg);
-		List<Statistic> reservedStatistics = getStatistics();
+		String[] arg = {String.valueOf(app.getStatisticDateOfStatisticTable())};		
+		app.updateStatisticTableBaseOnAddedCallLogs(this,selection,arg);
+		List<Statistic> statistics = getStatisticsFromTable();
 		
-		return reservedStatistics;
+		return statistics;
 	}
 	
 	private class StatisticAdapter extends ArrayAdapter<Statistic> {
@@ -299,15 +269,13 @@ private List<Statistic> getStatistics(){
 				LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 				convertView = inflater.inflate(R.layout.list_item, parent, false);
 			}
-
 			TextView name = (TextView) convertView.findViewById(R.id.name);
 			TextView phonenumber = (TextView) convertView.findViewById(R.id.number);
 			TextView du = (TextView) convertView.findViewById(R.id.duration);
 			TextView counts = (TextView) convertView.findViewById(R.id.counts);
 			TextView ave = (TextView) convertView.findViewById(R.id.average_duration);
 			ImageView image = (ImageView) convertView.findViewById(R.id.userImage);
-			image.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ddicon));
-	
+			image.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ddicon));	
 			Statistic statistic = getItem(position);
 	
 			if (statistic != null) {
@@ -320,48 +288,15 @@ private List<Statistic> getStatistics(){
 				if (bitmap != null) {
 					image.setImageBitmap(bitmap);
 				}else {
-					if(getDisplayImageBaseOnContactId(statistic.getContacturi()) != null){
+					if(getContactImageBaseOnContactId(statistic.getContacturi()) != null){
 						image.setTag(statistic.get_id());
-						image.setImageBitmap(getDisplayImageBaseOnContactId(statistic.getContacturi()));
-						imageStoreInCache(image,getDisplayImageBaseOnContactId(statistic.getContacturi()));
+						image.setImageBitmap(getContactImageBaseOnContactId(statistic.getContacturi()));
+						imageStoreInCache(image,getContactImageBaseOnContactId(statistic.getContacturi()));
 					}
-				//image.setTag(statistic.get_id());
-				// separate thread/via task, for retrieving each image
-				// (note that this is brittle as is, should stop all threads in onPause)	
-				//new RetrieveImageTask(image).executeOnExecutor(executor,statistic.getContacturi());
 				}
-			}
-	
+			}	
 			return convertView;
-		}
-		 
-	}
-	
-	private class RetrieveImageTask extends AsyncTask<String, Void, Bitmap> {
-		private ImageView imageView;
-
-		public RetrieveImageTask(ImageView imageView) {
-			this.imageView = imageView;
-		}
-
-		@Override
-		protected Bitmap doInBackground(String... args) {
-			ContentResolver cr = getContentResolver(); 
-			Uri uri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, 
-					Long.parseLong(args[0])); 
-			InputStream input = ContactsContract.Contacts.openContactPhotoInputStream(cr, uri); 
-			Bitmap bitmap = BitmapFactory.decodeStream(input); 
-			return bitmap;
-		}
-
-		@Override
-		protected void onPostExecute(Bitmap bitmap) {
-			if (bitmap != null) {
-				imageView.setImageBitmap(bitmap);
-				app.getImageCache().put((Long) imageView.getTag(), bitmap);
-				imageView.setTag(null);
-			}
-		}
+		}		 
 	}
 
 }

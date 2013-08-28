@@ -30,7 +30,6 @@ public class WhoCalledOrmLiteHelper  extends OrmLiteSqliteOpenHelper {
 		super(context, DB_NAME, null, DB_VERSION);
 	}
 
-
 	@Override
 	public void onCreate(SQLiteDatabase arg0, ConnectionSource arg1) {
 		try {
@@ -44,7 +43,6 @@ public class WhoCalledOrmLiteHelper  extends OrmLiteSqliteOpenHelper {
 		}
 		
 	}
-
 
 	@Override
 	public void onUpgrade(SQLiteDatabase arg0, ConnectionSource arg1, int arg2,
@@ -112,7 +110,6 @@ public class WhoCalledOrmLiteHelper  extends OrmLiteSqliteOpenHelper {
 		}
 		return statisticRuntimeDao;
 	}
-	
 
 	/**
 	* Close the database connections and clear any cached DAOs.

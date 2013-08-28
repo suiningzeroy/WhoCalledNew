@@ -68,14 +68,6 @@ public class WhoCalledApp extends Application {
 		releaseOrmLiteHelper();
 	}
 	
-	public void insertToStatistics(Statistic staistic){
-		try {
-			getOrmLiteHelper().getStatisticDao().create(staistic);
-		}catch (SQLException e) {
-			e.printStackTrace();
-		}
-	}
-	
 	public Map<Long, Bitmap> getImageCache() {
 		return this.imageCache;
 	}
@@ -84,7 +76,7 @@ public class WhoCalledApp extends Application {
 		return this.prefs;
 	}
 	
-	public void clearCallRecordTable() {
+	private void clearCallRecordTable() {
 		Log.d(LOGGING_TAG, "clearCallRecordTable  ");
 		try {
 			getOrmLiteHelper().getCallRecordDao().delete(getOrmLiteHelper().getCallRecordDao().queryForAll());
@@ -93,7 +85,7 @@ public class WhoCalledApp extends Application {
 		}
 	}
 	
-	public void clearContactTable() {
+	private void clearContactTable() {
 		Log.d(LOGGING_TAG, "clearContactTable  ");
 		try {
 			getOrmLiteHelper().getContactDao().delete(getOrmLiteHelper().getContactDao().queryForAll());
@@ -102,7 +94,7 @@ public class WhoCalledApp extends Application {
 		}
 	}
 	
-	public void clearStatisticTable() {
+	private void clearStatisticTable() {
 		Log.d(LOGGING_TAG, "clearStatisticTable  ");
 		try {
 			getOrmLiteHelper().getStatisticDao().delete(getOrmLiteHelper().getStatisticDao().queryForAll());
@@ -111,7 +103,7 @@ public class WhoCalledApp extends Application {
 		}
 	}
 
-	public Contact getContactBaseOnPhoneNumber(String phoneNumber){
+	private Contact getContactBaseOnPhoneNumber(String phoneNumber){
 		List<Contact> names = null;
 		Contact nullContact = new Contact();
 		
@@ -128,15 +120,15 @@ public class WhoCalledApp extends Application {
 		}
 	}
 	
-	public void wirteDataToStatistcTable(String sampledate,String[] input) {		
-		
-		Statistic statistic = new Statistic();		
-		statistic = getStatistcBaseOnArray(sampledate,input);
-
-		insertToStatistics(statistic);	
+	private void insertToStatistics(Statistic staistic){
+		try {
+			getOrmLiteHelper().getStatisticDao().create(staistic);
+		}catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 	
-	public Statistic getStatistcBaseOnArray(String sampledate,String[] input) {		
+	private Statistic getStatistcBaseOnArray(String sampledate,String[] input) {		
 		Contact currentContact = getContactBaseOnPhoneNumber(input[0]);
 		
 		Statistic statistic = new Statistic();		
@@ -149,38 +141,24 @@ public class WhoCalledApp extends Application {
 		statistic.setUsername(currentContact.getContactname());
 		
 		return statistic;
-
+	}
+	private void wirteDataToStatistcTable(String sampledate,String[] input) {		
+		
+		Statistic statistic = new Statistic();		
+		statistic = getStatistcBaseOnArray(sampledate,input);
+		insertToStatistics(statistic);	
 	}
 	
-	public String getStatisticDateOfCurrentStatistic(){
-		
-		String statisticdate = "";
-		try{
-			GenericRawResults<String[]> maxdateResults =
-				getOrmLiteHelper().getCallRecordDao().queryRaw(
-					"select max(statisticdate) as sampledate from Statistic ");
-			for (String[] maxdateResult : maxdateResults) {
-				statisticdate = maxdateResult[0];
-		}
-		}catch (SQLException e){
-				e.printStackTrace();
-		}
-		
-		Log.d(LOGGING_TAG, "statisticdate is :" + statisticdate);
-		
-		return statisticdate;
-	}
-	
-	public String getSampleDateOfCurrentStatistic(){
+	private String getStatisticDateOfCurrentStatistic(){
 		Date now = new Date();
-		long statisticSampleDateInLong = now.getTime();
+		long statisticDate = now.getTime();
 		
-		return Long.toString(statisticSampleDateInLong);
+		return Long.toString(statisticDate);
 	}
 	
-	public void storeStatisticFromRecordsToTable(){		
+	public void storeStatisticsFromRecordsToStatisticTable(){		
 		
-		String sampleDate = getSampleDateOfCurrentStatistic();
+		String statisticDate = getStatisticDateOfCurrentStatistic();
 		
 		clearStatisticTable();
 		
@@ -191,20 +169,18 @@ public class WhoCalledApp extends Application {
 						"CallRecorder group by phonenumber order by count(_id) desc");
 			for (String[] resultArray : rawResults) {
 				if(resultArray != null){
-					wirteDataToStatistcTable(sampleDate,resultArray);
+					wirteDataToStatistcTable(statisticDate,resultArray);
 				}
 			}
 				
 		}catch (SQLException e){
 			e.printStackTrace();
-		
-		}		
+		}
 		clearCallRecordTable();
-		Log.d(LOGGING_TAG, "statistic table is prepared!");
 	}
 
 //------------------------------------------------------------------------------//
-	public void insertRecordToCallrecords(CallRecord callRecord){
+	private void insertRecordToCallrecords(CallRecord callRecord){
 		try {
 			getOrmLiteHelper().getCallRecordDao().create(callRecord);
 		}catch (SQLException e) {
@@ -212,7 +188,7 @@ public class WhoCalledApp extends Application {
 		}
 	}
 	
-	public void wirteDataToCallRecordTable(String number, Long callDate, Long duration) {
+	private void wirteDataToCallRecordTable(String number, Long callDate, Long duration) {
 		CallRecord callRecord =  new CallRecord();
 		callRecord.setPhonenumber(number);
 		callRecord.setCalldate(callDate);
@@ -220,10 +196,8 @@ public class WhoCalledApp extends Application {
 		
 		insertRecordToCallrecords(callRecord);
 	}
-		
-	public void StoreTheCallLogToTable(Cursor cursor) {
-		
-		Log.d(LOGGING_TAG, "StoreTheCallLogToTable!");
+	
+	private void storeTheCallLogToCallRecordTable(Cursor cursor) {
 		cursor.moveToFirst();
 		
 		do {
@@ -232,6 +206,24 @@ public class WhoCalledApp extends Application {
 			Long numberDate = cursor.getLong(cursor.getColumnIndex(CallLog.Calls.DATE));
 			wirteDataToCallRecordTable(phoneNumber,numberDate,du);
 		}while(cursor.moveToNext()) ;
+	}
+	
+	public void storeCallLogsFromQureyToCallRecordTable(Context context,String selection, String[] arg){
+		
+		Cursor cursor = context.getContentResolver().query(CallLog.Calls.CONTENT_URI,
+				null, selection, arg, CallLog.Calls.DEFAULT_SORT_ORDER);
+		storeTheCallLogToCallRecordTable(cursor);
+		cursor.close();
+	}
+//-------------------------------------------------------------
+	private int updateStatistic(Statistic statistic){
+		int result = 0;
+		try {
+			result = getOrmLiteHelper().getStatisticDao().update(statistic);
+		}catch (SQLException e) {
+			e.printStackTrace();
+		}		
+		return result;
 	}
 	
 	private Statistic queryStatisticBasedOnPhoneNumber(String phoneNumber){
@@ -250,20 +242,7 @@ public class WhoCalledApp extends Application {
 		}
 	}
 	
-	private int updateStatistic(Statistic statistic){
-		int result = 0;
-		try {
-			result = getOrmLiteHelper().getStatisticDao().update(statistic);
-		}catch (SQLException e) {
-			e.printStackTrace();
-		}
-		
-		return result;
-	}
-	
 	public void updateStatisticUseAddedCallLog(Cursor cursor) {
-		
-		Log.d(LOGGING_TAG, "updateStatisticUse!");
 		cursor.moveToFirst();
 		
 		do {
@@ -291,22 +270,9 @@ public class WhoCalledApp extends Application {
 		}while(cursor.moveToNext()) ;
 	}
 	
-	public void StoreCallLogsFromQurey(Context context,String selection, String[] arg){
-		
-		Log.d(LOGGING_TAG, "StoreCallLogsFromQurey!");
-		//Log.d(LOGGING_TAG, "sql is!" + "select * from calls where " + selection + " > " + arg[0]);
+	public void updateStatisticTableBaseOnAddedCallLogs(Context context,String selection, String[] arg){		
 		Cursor cursor = context.getContentResolver().query(CallLog.Calls.CONTENT_URI,
 				null, selection, arg, CallLog.Calls.DEFAULT_SORT_ORDER);
-		Log.d(LOGGING_TAG, "cursor " + String.valueOf(cursor.getCount()));
-		StoreTheCallLogToTable(cursor);
-		cursor.close();
-	}
-	
-	public void StoreAddedCallLogsFromQurey(Context context,String selection, String[] arg){
-		
-		Cursor cursor = context.getContentResolver().query(CallLog.Calls.CONTENT_URI,
-				null, selection, arg, CallLog.Calls.DEFAULT_SORT_ORDER);
-		Log.d(LOGGING_TAG, "added cursor !" + String.valueOf(cursor.getCount()));
 
 		if (cursor != null & cursor.getCount() != 0){
 			updateStatisticUseAddedCallLog(cursor);
@@ -315,39 +281,7 @@ public class WhoCalledApp extends Application {
 		}		
 		cursor.close();
 	}
-	//-----------------------------------------------------
-	public void contactDeals(Context context) {
-		Cursor cursor= context.getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, 
-										null, null, null, null);		
-		Log.d(LOGGING_TAG, String.valueOf(cursor.getCount()));
-		clearContactTable();
-		StoreTheContactInfoToTable(context,cursor);
-		cursor.close();
-	}
-	
-	private void StoreTheContactInfoToTable(Context context,Cursor cursor) {
-		Integer count = 0;
-		while (cursor.moveToNext()) {  
-			count++;
-			String id=cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));  
-			String name=cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));  
-			String phoneNumber=null;  
-			
-			Cursor phones=context.getContentResolver()
-					 .query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, 
-					 					ContactsContract.CommonDataKinds.Phone.CONTACT_ID+"="+id, null, null);
-			while (phones.moveToNext()) {  
-				phoneNumber=phones.getString(phones.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));  
-				Contact contact = new Contact();
-				contact.setContactId(id);
-				contact.setContactname(name);
-				contact.setPhonenumber(phoneNumber);
-				insertToContact(contact);
-			}
-			phones.close();
-			//Log.d(LOGGING_TAG," id ="+id+" ,name= "+name+" ,phone: "+phoneNumber);  
-		}
-	}
+//-----------------------------------------------------//////
 	private void insertToContact(Contact contact){
 		try {
 			getOrmLiteHelper().getContactDao().create(contact);
@@ -357,17 +291,64 @@ public class WhoCalledApp extends Application {
 		}
 	}
 	
+	private void storeTheContactsInfoToContactTable(Context context,Cursor cursor) {
+		
+		while (cursor.moveToNext()) {  
+			String id=cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts._ID));  
+			String name=cursor.getString(cursor.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));  
+			String phoneNumber=null;  
+			
+			Cursor contactCursor=context.getContentResolver()
+					 .query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null, 
+					 					ContactsContract.CommonDataKinds.Phone.CONTACT_ID+"="+id, null, null);
+			while (contactCursor.moveToNext()) {  
+				phoneNumber=contactCursor.getString(contactCursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));  
+				Contact contact = new Contact();
+				contact.setContactId(id);
+				contact.setContactname(name);
+				contact.setPhonenumber(phoneNumber);
+				insertToContact(contact);
+			}
+			contactCursor.close();
+		}
+	}
+
+	public void storeUpToDateContactsInfoToContactTable(Context context) {
+		Cursor cursor= context.getContentResolver().query(ContactsContract.Contacts.CONTENT_URI, 
+										null, null, null, null);		
+		Log.d(LOGGING_TAG, String.valueOf(cursor.getCount()));
+		clearContactTable();
+		storeTheContactsInfoToContactTable(context,cursor);
+		cursor.close();
+	}
+	
+//---------------------------------------------------------------
+	public String getStatisticDateOfStatisticTable(){		
+		String statisticDate = "";
+		try{
+			GenericRawResults<String[]> maxdateResults =
+				getOrmLiteHelper().getCallRecordDao().queryRaw(
+					"select max(statisticdate) as sampledate from Statistic ");
+			for (String[] maxdateResult : maxdateResults) {
+				statisticDate = maxdateResult[0];
+		}
+		}catch (SQLException e){
+				e.printStackTrace();
+		}
+		
+		return statisticDate;
+	}
+	
 	public boolean isTodaysDataPrepare(){
 		Log.i(LOGGING_TAG, "isTodaysDataPrepare");
 		
-		long StatisticDate = Long.valueOf(getStatisticDateOfCurrentStatistic());
+		long StatisticDate = Long.valueOf(getStatisticDateOfStatisticTable());
 		Date now = new Date();
 			if( now.getTime() - StatisticDate < ONE_DAY ){
 				return true;
 			}else{
 				return false;				
 			}
-	}
-	
+	}	
 
 }

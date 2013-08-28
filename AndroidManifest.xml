@@ -38,7 +38,7 @@
 	        		<action android:name="android.whocalled.Start"/>
 	        	</intent-filter>
 		</receiver>
-		<receiver android:name=".AlarmReceiver" 
+		<receiver android:name=".WhoCalledAlarmReceiver" 
 		   />
     </application>
 
