@@ -34,6 +34,7 @@ public class WhoCalledApp extends Application {
 	private WhoCalledOrmLiteHelper ormLiteHelper;
 	private Map<Long, Bitmap> imageCache;
 	private SharedPreferences prefs;
+	private GenericRawResults<String[]> contacts = null;
 	
 	
 	public WhoCalledOrmLiteHelper getOrmLiteHelper() {
@@ -78,11 +79,11 @@ public class WhoCalledApp extends Application {
 	
 	private void clearCallRecordTable() {
 		Log.d(LOGGING_TAG, "clearCallRecordTable  ");
-		try {
+	/*	try {
 			getOrmLiteHelper().getCallRecordDao().delete(getOrmLiteHelper().getCallRecordDao().queryForAll());
 		}catch (SQLException e) {
 			e.printStackTrace();
-		}
+		}*/
 	}
 	
 	private void clearContactTable() {
@@ -213,6 +214,7 @@ public class WhoCalledApp extends Application {
 		Cursor cursor = context.getContentResolver().query(CallLog.Calls.CONTENT_URI,
 				null, selection, arg, CallLog.Calls.DEFAULT_SORT_ORDER);
 		storeTheCallLogToCallRecordTable(cursor);
+		updateCallRecordForUnrecognizedPhoneNumber();
 		cursor.close();
 	}
 //-------------------------------------------------------------
@@ -323,6 +325,7 @@ public class WhoCalledApp extends Application {
 	}
 	
 //---------------------------------------------------------------
+
 	public String getStatisticDateOfStatisticTable(){		
 		String statisticDate = "";
 		try{
@@ -350,5 +353,68 @@ public class WhoCalledApp extends Application {
 				return false;				
 			}
 	}	
+	
+//----------------------------------------
+	
+	public void getPhoneNumberIfLengthLowerThanEight()
+	{
+		try {
+			contacts = this.getOrmLiteHelper().getContactDao().queryRaw("select distinct phonenumber from Contact " +
+					"where length(phonenumber)<= 8;");
+			Log.i(LOGGING_TAG,"get length < 8 number" );
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	public void updateCallRecordForUnrecognizedPhoneNumber(){
+		contacts = null;
+		List<CallRecord> records = new ArrayList<CallRecord>();
+		getPhoneNumberIfLengthLowerThanEight();
+		if ( contacts != null ){
+			for (String[] contact : contacts) {
+				Log.i(LOGGING_TAG,"length < 8 number : " + contact[0]);
+				try {
+					records =this.getOrmLiteHelper().getCallRecordDao().queryBuilder().where().like("phonenumber", "%"+ contact[0]).query();
+					Log.i(LOGGING_TAG,"get callrecord whose number like length < 8 number" + Integer.toString(records.size()));
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+				
+				if ( records.size() != 0){
+					for (CallRecord record : records) {
+						Log.i(LOGGING_TAG,"update this records, original number is :" 
+								+ record.getPhonenumber() + " new number is :" + contact[0]);
+						record.setPhonenumber(contact[0]);
+						try {
+							this.getOrmLiteHelper().getCallRecordDao().update(record);
+						} catch (SQLException e) {
+							e.printStackTrace();
+						}
+					}
+				}else{
+					Log.i(LOGGING_TAG," there is no reords' number like length < 8 number" );
+				}
+			
+			}
+		}else{
+			Log.i(LOGGING_TAG,"contacts has no length < 8 number" );
+		}
+			
+	}
+	
+	public String modifyNumberInCallRecordIfUnrcognized(String phoneNumber){
+		List<CallRecord> records = new ArrayList<CallRecord>();
+		getPhoneNumberIfLengthLowerThanEight();
+
+		if ( contacts != null ){
+			for (String[] contact : contacts) {
+				Log.i(LOGGING_TAG,"length < 8 number : " + contact[0]);
+				//if(contact[0] == )
+			}
+		}else{
+			Log.i(LOGGING_TAG,"contacts has no length < 8 number" );
+		}
+		return "";
+	}
 
 }

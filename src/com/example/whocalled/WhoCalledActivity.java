@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import com.example.whocalled.model.CallRecord;
 import com.example.whocalled.model.Statistic;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 
@@ -298,5 +299,6 @@ private List<Statistic> getStatisticsFromTable(){
 			return convertView;
 		}		 
 	}
+	
 
 }
