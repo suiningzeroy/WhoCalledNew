@@ -12,9 +12,6 @@ import com.example.whocalled.model.Contact;
 import com.example.whocalled.model.Statistic;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.dao.GenericRawResults;
-import com.j256.ormlite.stmt.PreparedQuery;
-import com.j256.ormlite.stmt.QueryBuilder;
-
 import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -28,7 +25,6 @@ import android.util.Log;
 public class WhoCalledApp extends Application {
 	
 	public static final long ONE_DAY = 24 * 60 * 60 * 1000;
-	public static final long MORE_THAN_ONE_DAY = 3 * 24 * 60 * 60 * 1000;
 	
 	private String LOGGING_TAG = "WhoCalled Application";
 	private WhoCalledOrmLiteHelper ormLiteHelper;
@@ -79,11 +75,11 @@ public class WhoCalledApp extends Application {
 	
 	private void clearCallRecordTable() {
 		Log.d(LOGGING_TAG, "clearCallRecordTable  ");
-	/*	try {
+		try {
 			getOrmLiteHelper().getCallRecordDao().delete(getOrmLiteHelper().getCallRecordDao().queryForAll());
 		}catch (SQLException e) {
 			e.printStackTrace();
-		}*/
+		}
 	}
 	
 	private void clearContactTable() {
@@ -361,7 +357,7 @@ public class WhoCalledApp extends Application {
 		try {
 			contacts = this.getOrmLiteHelper().getContactDao().queryRaw("select distinct phonenumber from Contact " +
 					"where length(phonenumber)<= 8;");
-			Log.i(LOGGING_TAG,"get length < 8 number" );
+			//Log.i(LOGGING_TAG,"get length < 8 number" );
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -382,8 +378,8 @@ public class WhoCalledApp extends Application {
 				
 				if ( records.size() != 0){
 					for (CallRecord record : records) {
-						Log.i(LOGGING_TAG,"update this records, original number is :" 
-								+ record.getPhonenumber() + " new number is :" + contact[0]);
+						//Log.i(LOGGING_TAG,"update this records, original number is :" 
+								//+ record.getPhonenumber() + " new number is :" + contact[0]);
 						record.setPhonenumber(contact[0]);
 						try {
 							this.getOrmLiteHelper().getCallRecordDao().update(record);
@@ -403,17 +399,17 @@ public class WhoCalledApp extends Application {
 	}
 	
 	public String modifyNumberInCallRecordIfUnrcognized(String phoneNumber){
-		Log.i(LOGGING_TAG,"new CallLog number recognizing");
+		//Log.i(LOGGING_TAG,"new CallLog number recognizing");
 		
 		getPhoneNumberIfLengthLowerThanEight();
 		String result = new String(phoneNumber);
 		
 		if ( contacts != null && phoneNumber.length() > 4){
 			for (String[] contact : contacts) {
-				Log.i(LOGGING_TAG,"length < 8 number : " + contact[0]);
-				Log.i(LOGGING_TAG,"indexOf(contact[0]): "+ String.valueOf(phoneNumber.indexOf(contact[0])) + " . indexOf0 :" + String.valueOf(phoneNumber.indexOf("0")));
+				//Log.i(LOGGING_TAG,"length < 8 number : " + contact[0]);
+				//Log.i(LOGGING_TAG,"indexOf(contact[0]): "+ String.valueOf(phoneNumber.indexOf(contact[0])) + " . indexOf0 :" + String.valueOf(phoneNumber.indexOf("0")));
 				if( (phoneNumber.indexOf(contact[0]) > 0)&&(phoneNumber.indexOf(contact[0]) <= 4) && (phoneNumber.indexOf("0") == 0)){
-					Log.i(LOGGING_TAG,"phoneNumber : "+ phoneNumber + " contact number :" + contact[0]);
+					//Log.i(LOGGING_TAG,"phoneNumber : "+ phoneNumber + " contact number :" + contact[0]);
 					result =  contact[0];
 				}
 			}
