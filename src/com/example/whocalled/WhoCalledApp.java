@@ -250,7 +250,7 @@ public class WhoCalledApp extends Application {
 		do {
 			Statistic result = new Statistic();
 			Statistic resultForUpdate = new Statistic();
-			String phoneNumber = cursor.getString(cursor.getColumnIndex(CallLog.Calls.NUMBER));
+			String phoneNumber = modifyNumberInCallRecordIfUnrcognized(cursor.getString(cursor.getColumnIndex(CallLog.Calls.NUMBER)));
 			Long du = cursor.getLong(cursor.getColumnIndex(CallLog.Calls.DURATION));
 			Long numberDate = cursor.getLong(cursor.getColumnIndex(CallLog.Calls.DATE));
 			resultForUpdate = queryStatisticBasedOnPhoneNumber(phoneNumber);
@@ -276,7 +276,7 @@ public class WhoCalledApp extends Application {
 		Cursor cursor = context.getContentResolver().query(CallLog.Calls.CONTENT_URI,
 				null, selection, arg, CallLog.Calls.DEFAULT_SORT_ORDER);
 
-		if (cursor != null & cursor.getCount() != 0){
+		if (cursor != null && cursor.getCount() != 0){
 			updateStatisticUseAddedCallLog(cursor);
 		}else{
 			Log.d(LOGGING_TAG, "cursor is null!");
@@ -374,7 +374,7 @@ public class WhoCalledApp extends Application {
 			for (String[] contact : contacts) {
 				Log.i(LOGGING_TAG,"length < 8 number : " + contact[0]);
 				try {
-					records =this.getOrmLiteHelper().getCallRecordDao().queryBuilder().where().like("phonenumber", "%"+ contact[0]).query();
+					records =this.getOrmLiteHelper().getCallRecordDao().queryBuilder().where().like("phonenumber", "0%"+ contact[0]).query();
 					Log.i(LOGGING_TAG,"get callrecord whose number like length < 8 number" + Integer.toString(records.size()));
 				} catch (SQLException e) {
 					e.printStackTrace();
@@ -403,18 +403,24 @@ public class WhoCalledApp extends Application {
 	}
 	
 	public String modifyNumberInCallRecordIfUnrcognized(String phoneNumber){
-		List<CallRecord> records = new ArrayList<CallRecord>();
+		Log.i(LOGGING_TAG,"new CallLog number recognizing");
+		
 		getPhoneNumberIfLengthLowerThanEight();
-
-		if ( contacts != null ){
+		String result = new String(phoneNumber);
+		
+		if ( contacts != null && phoneNumber.length() > 4){
 			for (String[] contact : contacts) {
 				Log.i(LOGGING_TAG,"length < 8 number : " + contact[0]);
-				//if(contact[0] == )
+				Log.i(LOGGING_TAG,"indexOf(contact[0]): "+ String.valueOf(phoneNumber.indexOf(contact[0])) + " . indexOf0 :" + String.valueOf(phoneNumber.indexOf("0")));
+				if( (phoneNumber.indexOf(contact[0]) > 0)&&(phoneNumber.indexOf(contact[0]) <= 4) && (phoneNumber.indexOf("0") == 0)){
+					Log.i(LOGGING_TAG,"phoneNumber : "+ phoneNumber + " contact number :" + contact[0]);
+					result =  contact[0];
+				}
 			}
 		}else{
 			Log.i(LOGGING_TAG,"contacts has no length < 8 number" );
 		}
-		return "";
+		return result;
 	}
 
 }
