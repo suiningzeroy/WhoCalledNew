@@ -83,7 +83,7 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		progressDialog.setMessage(getString(R.string.prepare));
 
 
-		app.storeUpToDateContactsInfoToContactTable(this);
+		WhoCalledUtil.storeUpToDateContactsInfoToContactTable(this);
 		statistics = new ArrayList<Statistic>();
 		myStatisticAdapter = new StatisticAdapter(statistics);		
 		statisticsListView.setAdapter(myStatisticAdapter);
@@ -186,10 +186,10 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		@Override
 		protected Integer doInBackground(Void... args) {
 			publishProgress(1);
-			app.storeCallLogsFromQureyToCallRecordTable(WhoCalledActivity.this,null,null);
-			app.storeStatisticsFromRecordsToStatisticTable();
+			WhoCalledUtil.storeCallLogsFromQureyToCallRecordTable(WhoCalledActivity.this,null,null);
+			WhoCalledUtil.storeStatisticsFromRecordsToStatisticTable(WhoCalledActivity.this);
 			newstatistics = getStatisticsForAdapter();
-			app.releaseOrmLiteHelper();
+			WhoCalledUtil.releaseOrmLiteHelper();
 			setBooleanValueToSharedPreferences(IS_INITIAL_FLAG,true);
 			sendMessage(INITIAL_COMPLETE_MESSAGE);
 			publishProgress(2);
@@ -209,10 +209,10 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 	 }
 	
 
-private List<Statistic> getStatisticsFromTable(){		
+	private List<Statistic> getStatisticsFromTable(){		
 		List<Statistic> result = null;
 		try {
-			result = app.getOrmLiteHelper().getStatisticDao().queryBuilder().orderBy(this.orderByColumn,false).query();
+			result = WhoCalledUtil.getOrmLiteHelper(this).getStatisticDao().queryBuilder().orderBy(this.orderByColumn,false).query();
 		}catch (SQLException e) {
 			Log.d(LOGGING_TAG, "writing CallRecord reading to database failed");
 			e.printStackTrace();
@@ -244,8 +244,8 @@ private List<Statistic> getStatisticsFromTable(){
 	
 	private List<Statistic> getStatisticsForAdapter(){
 		String selection = CallLog.Calls.DATE + " > ?";
-		String[] arg = {String.valueOf(app.getStatisticDateOfStatisticTable())};		
-		app.updateStatisticTableBaseOnAddedCallLogs(this,selection,arg);
+		String[] arg = {String.valueOf(WhoCalledUtil.getStatisticDateOfStatisticTable(this))};		
+		WhoCalledUtil.updateStatisticTableBaseOnAddedCallLogs(this,selection,arg);
 		List<Statistic> statistics = getStatisticsFromTable();
 		
 		return statistics;
