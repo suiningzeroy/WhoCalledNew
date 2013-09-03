@@ -1,6 +1,10 @@
 package com.example.whocalled;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -12,8 +16,29 @@ import android.util.Log;
 public class WhoCalledStartUpReceiver extends BroadcastReceiver {
 
 	private static final int INITIAL_DELAY_IN_MINUTES = 2;
-	public static final int SAMPLING_INTERVAL_IN_MILLIS = 12 * 60 * 60 * 1000;
-	public static final String LOGGING_TAG = "WhoCalled StartUpReceiver";
+	private static final int SAMPLING_INTERVAL_IN_MILLIS = 24 * 60 * 60 * 1000;
+	private static final int ONE_DAY_IN_MILLIS = 24 * 60 * 60 * 1000;
+	private static final int ONE_HOUR_IN_MILLIS = 24 * 60 * 60 * 1000;
+	private static final String LOGGING_TAG = "WhoCalled StartUpReceiver";
+	
+	private long millsTimeToOneOclockInMorning;
+	
+	private int getMillsTimeToOneOclockInNextMorning(){
+		Date beginOfDay = new Date();
+		final SimpleDateFormat dateStringFormat =new SimpleDateFormat("yyyyMMdd",Locale.CHINA);
+		Date now = new Date();		
+		String dateString = dateStringFormat.format(now);
+		
+		try {
+			beginOfDay = dateStringFormat.parse(dateString);
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		
+		long intervel =  now.getTime() - beginOfDay.getTime();
+		
+		return (int) ((ONE_DAY_IN_MILLIS + ONE_HOUR_IN_MILLIS - intervel)/(60*1000));
+	}
 	
 	@Override
 	public void onReceive(Context context, Intent intent) {
@@ -24,7 +49,7 @@ public class WhoCalledStartUpReceiver extends BroadcastReceiver {
 		PendingIntent sender = PendingIntent.getBroadcast(context, 0, 
 				i, PendingIntent.FLAG_CANCEL_CURRENT);
 		Calendar now = Calendar.getInstance();
-		now.add(Calendar.MINUTE, INITIAL_DELAY_IN_MINUTES);
+		now.add(Calendar.MINUTE, getMillsTimeToOneOclockInNextMorning());
 		alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, 
 				now.getTimeInMillis(), SAMPLING_INTERVAL_IN_MILLIS, sender);
 		Log.d(LOGGING_TAG,"setAlarm");
