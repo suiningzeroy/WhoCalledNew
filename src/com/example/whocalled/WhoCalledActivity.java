@@ -101,6 +101,7 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		if (progressDialog.isShowing()) {
 			progressDialog.dismiss();
 		}
+		WhoCalledUtil.releaseOrmLiteHelper();
 		super.onPause();
 	}
 
@@ -263,7 +264,7 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 			}
 		}
 	
-		 @Override
+		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 	
 			if (convertView == null) {

@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -210,11 +211,17 @@ public class WhoCalledUtil {
 	
 	public static void updateStatisticUseAddedCallLog(Context context,Cursor cursor) {
 		cursor.moveToFirst();
-		
+		String phoneNumber;
+		Log.d(LOGGING_TAG, "updateStatisticUseAddedCallLog!");
 		do {
+			Log.d(LOGGING_TAG, "CACHED_NAME!: " + cursor.getString(cursor.getColumnIndex(CallLog.Calls.CACHED_NAME)));
 			Statistic result = new Statistic();
 			Statistic resultForUpdate = new Statistic();
-			String phoneNumber = modifyNumberInCallRecordIfUnrcognized(context,cursor.getString(cursor.getColumnIndex(CallLog.Calls.NUMBER)));
+			if(cursor.getString(cursor.getColumnIndex(CallLog.Calls.CACHED_NAME)) == null ){
+				phoneNumber = modifyNumberInCallRecordIfUnrcognized1(context,cursor.getString(cursor.getColumnIndex(CallLog.Calls.NUMBER)));
+			}else{
+				phoneNumber = cursor.getString(cursor.getColumnIndex(CallLog.Calls.NUMBER));
+			}
 			Long du = cursor.getLong(cursor.getColumnIndex(CallLog.Calls.DURATION));
 			Long numberDate = cursor.getLong(cursor.getColumnIndex(CallLog.Calls.DATE));
 			resultForUpdate = queryStatisticBasedOnPhoneNumber(context,phoneNumber);
@@ -320,20 +327,26 @@ public class WhoCalledUtil {
 	
 //----------------------------------------
 	
-	public static void getPhoneNumberIfLengthLowerThanEight(Context context)
+	public static GenericRawResults<String[]> getPhoneNumberIfLengthLowerThanInputNumber(Context context, int inputNumber)
 	{
+		Log.i(LOGGING_TAG, "select distinct phonenumber from Contact " +
+					"where length(phonenumber)<= " + Integer.toString(inputNumber) + " order by length(phonenumber)"+ ";");
+		
 		try {
 			contacts = getOrmLiteHelper(context).getContactDao().queryRaw("select distinct phonenumber from Contact " +
-					"where length(phonenumber)<= 8;");
-			//Log.i(LOGGING_TAG,"get length < 8 number" );
+					"where length(phonenumber)<= " + Integer.toString(inputNumber) + " order by length(phonenumber)" + ";");
+			//Log.i(LOGGING_TAG,"get length < inputNumber" );
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		
+		return contacts;
 	}
 	public static void updateCallRecordForUnrecognizedPhoneNumber(Context context){
 		contacts = null;
 		List<CallRecord> records = new ArrayList<CallRecord>();
-		getPhoneNumberIfLengthLowerThanEight(context);
+		getPhoneNumberIfLengthLowerThanInputNumber(context,8);
 		if ( contacts != null ){
 			for (String[] contact : contacts) {
 				Log.i(LOGGING_TAG,"length < 8 number : " + contact[0]);
@@ -369,7 +382,7 @@ public class WhoCalledUtil {
 	public static String modifyNumberInCallRecordIfUnrcognized(Context context,String phoneNumber){
 		//Log.i(LOGGING_TAG,"new CallLog number recognizing");
 		
-		getPhoneNumberIfLengthLowerThanEight(context);
+		getPhoneNumberIfLengthLowerThanInputNumber(context,8);
 		String result = new String(phoneNumber);
 		
 		if ( contacts != null && phoneNumber.length() > 4){
@@ -379,11 +392,73 @@ public class WhoCalledUtil {
 				if( (phoneNumber.indexOf(contact[0]) > 0)&&(phoneNumber.indexOf(contact[0]) <= 4) && (phoneNumber.indexOf("0") == 0)){
 					//Log.i(LOGGING_TAG,"phoneNumber : "+ phoneNumber + " contact number :" + contact[0]);
 					result =  contact[0];
+					break;
+				}
+			}
+		}else{
+			Log.i(LOGGING_TAG,"contacts has no length < 100 number" );
+		}
+		return result;
+	}
+	
+	private static boolean compareTheLastSeveralFiguresBetweenTwoInputNumber(String contactNumber, String callRecordNumber,int figrueNumber) {
+		Log.i(LOGGING_TAG,"compareTheLastSeveralFiguresBetweenTwoInputNumber");
+		Log.i(LOGGING_TAG,"contactNumber.substring: " + contactNumber.substring(contactNumber.length()-figrueNumber, contactNumber.length()-1)
+						+ "callRecordNumber.substring: " + callRecordNumber.substring(callRecordNumber.length()-figrueNumber, callRecordNumber.length()-1));
+		return contactNumber.substring(contactNumber.length()-figrueNumber, contactNumber.length()).equals(
+				callRecordNumber.substring(callRecordNumber.length()-figrueNumber, callRecordNumber.length()));
+	}
+	
+	private static boolean compareFiguresBetweenTwoInputNumber(String contactNumber, String callRecordNumber) {
+		Integer contactNumberLength = contactNumber.length();
+		Integer callRecordNumberLength = callRecordNumber.length();
+		
+		Log.i(LOGGING_TAG,"compareFiguresBetweenTwoInputNumber, contactNumberLength = " + Integer.toString(contactNumberLength));
+		
+		if(contactNumberLength >= 10 ){
+			Log.i(LOGGING_TAG,"contactNumberLength  >= 10  ");
+			Log.i(LOGGING_TAG," callRecordNumber = " + Integer.toString(callRecordNumberLength));
+			Log.i(LOGGING_TAG," figrueNumber = " + Integer.toString(callRecordNumberLength >= 10 ? 10 : callRecordNumberLength));
+			
+			return compareTheLastSeveralFiguresBetweenTwoInputNumber(contactNumber,callRecordNumber
+						,callRecordNumberLength >= 10 ? 10 : callRecordNumberLength);
+		}
+		
+		if(contactNumberLength < 10 ){
+			Log.i(LOGGING_TAG,"contactNumberLength  < 10  ");
+			Log.i(LOGGING_TAG," callRecordNumber = " + Integer.toString(callRecordNumberLength));
+			Log.i(LOGGING_TAG," figrueNumber = " + Integer.toString(callRecordNumberLength >= 10 ? contactNumberLength : (contactNumberLength.compareTo(callRecordNumberLength) > 0 ? callRecordNumberLength : contactNumberLength)));
+			Log.i(LOGGING_TAG," figrueNumber sub = " + Integer.toString(contactNumberLength.compareTo(callRecordNumberLength) > 0 ? callRecordNumberLength : contactNumberLength));
+			Log.i(LOGGING_TAG," figrueNumber sub sub = " + Integer.toString(contactNumberLength.compareTo(callRecordNumberLength)));
+			return compareTheLastSeveralFiguresBetweenTwoInputNumber(contactNumber,callRecordNumber
+						,callRecordNumberLength >= 10 ? contactNumberLength : (contactNumberLength.compareTo(callRecordNumberLength) > 0 ? callRecordNumberLength : contactNumberLength));
+		}
+	
+		return false;
+	}
+	
+	public static String modifyNumberInCallRecordIfUnrcognized1(Context context,String phoneNumber){
+		String result = new String(phoneNumber);
+		Log.i(LOGGING_TAG,"phoneNumber : " + phoneNumber);
+		
+		GenericRawResults<String[]> allContacts = getPhoneNumberIfLengthLowerThanInputNumber(context,100);
+		
+		if ( contacts != null && phoneNumber.length() > 4){
+			for (String[] contact : allContacts) {
+				Log.i(LOGGING_TAG,"allContacts : " + contact[0]);
+			
+				if (compareFiguresBetweenTwoInputNumber(contact[0],phoneNumber)){
+					Log.i(LOGGING_TAG,"contact phoneNumber : match!!! ");
+					result = contact[0];
+					break;
 				}
 			}
 		}else{
 			Log.i(LOGGING_TAG,"contacts has no length < 8 number" );
 		}
+		
+		
 		return result;
 	}
+
 }
