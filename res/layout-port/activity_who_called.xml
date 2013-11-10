@@ -30,7 +30,8 @@
         android:id="@+id/numberTitle"
         android:layout_width="60dp"
         android:layout_height="wrap_content"
-        android:text="Number" />
+        android:gravity="center"
+        android:text="Phone" />
 
     <TextView
         android:id="@+id/durationTitle"
@@ -41,16 +42,10 @@
     
 	<TextView
 	    android:id="@+id/countsTitle"
-	    android:layout_width="50dp"
+	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
 	    android:gravity="center"
-	    android:text="Counts" />
-
-	<TextView
-	    android:id="@+id/average_durationTitle"
-	    android:layout_width="fill_parent"
-	    android:layout_height="wrap_content"
-	    android:text="Ave" />
+	    android:text="Calls" />
     </LinearLayout>
 
     <ListView

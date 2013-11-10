@@ -25,26 +25,30 @@ public final class R {
         public static final int ic_launcher=0x7f020001;
     }
     public static final class id {
+        public static final int RelativeLayout1=0x7f080007;
         public static final int WhoCalled=0x7f080000;
-        public static final int WhoCalledList=0x7f080007;
-        public static final int average_duration=0x7f08000e;
-        public static final int average_durationTitle=0x7f080006;
-        public static final int counts=0x7f08000d;
+        public static final int WhoCalledList=0x7f080006;
+        public static final int callerImage=0x7f080009;
+        public static final int callerInfo=0x7f080008;
+        public static final int callerName=0x7f08000a;
+        public static final int counts=0x7f080011;
         public static final int countsTitle=0x7f080005;
-        public static final int duration=0x7f08000c;
+        public static final int duration=0x7f080010;
         public static final int durationTitle=0x7f080004;
-        public static final int l=0x7f080008;
-        public static final int name=0x7f08000a;
+        public static final int l=0x7f08000c;
+        public static final int name=0x7f08000e;
         public static final int nameTitle=0x7f080002;
-        public static final int number=0x7f08000b;
+        public static final int number=0x7f08000f;
         public static final int numberTitle=0x7f080003;
-        public static final int orderby=0x7f08000f;
-        public static final int userImage=0x7f080009;
+        public static final int ok=0x7f08000b;
+        public static final int orderby=0x7f080012;
+        public static final int userImage=0x7f08000d;
         public static final int userImagetitle=0x7f080001;
     }
     public static final class layout {
         public static final int activity_who_called=0x7f030000;
-        public static final int list_item=0x7f030001;
+        public static final int call_detail=0x7f030001;
+        public static final int list_item=0x7f030002;
     }
     public static final class menu {
         public static final int who_called=0x7f070000;
@@ -55,6 +59,7 @@ public final class R {
         public static final int ave=0x7f050007;
         public static final int counts=0x7f050006;
         public static final int duration=0x7f050005;
+        public static final int intentservice_name=0x7f050008;
         public static final int orderby=0x7f050004;
         public static final int prepare=0x7f050003;
         public static final int service_name=0x7f050002;
@@ -69,17 +74,6 @@ public final class R {
             res/values-vXX/styles.xml, while customizations related to
             backward-compatibility can go here.
         
-
-        Base application theme for API 11+. This theme completely replaces
-        AppBaseTheme from res/values/styles.xml on API 11+ devices.
-    
- API 11 theme customizations can go here. 
-
-        Base application theme for API 14+. This theme completely replaces
-        AppBaseTheme from BOTH res/values/styles.xml and
-        res/values-v11/styles.xml on API 14+ devices.
-    
- API 14 theme customizations can go here. 
          */
         public static final int AppBaseTheme=0x7f060000;
         /**  Application theme. 

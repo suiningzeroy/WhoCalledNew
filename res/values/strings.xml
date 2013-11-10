@@ -9,5 +9,6 @@
 	<string name="duration">Total Call Duration</string>
 	<string name="counts">Call Counts</string>
 	<string name="ave">Average  Call Duration</string>
+	<string name="intentservice_name">WhoCalledIntentService</string>
 
 </resources>

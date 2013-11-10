@@ -50,6 +50,7 @@ public class WhoCalledStartUpReceiver extends BroadcastReceiver {
 				i, PendingIntent.FLAG_CANCEL_CURRENT);
 		Calendar now = Calendar.getInstance();
 		now.add(Calendar.MINUTE, getMillsTimeToOneOclockInNextMorning());
+		//now.add(Calendar.MINUTE, INITIAL_DELAY_IN_MINUTES);
 		alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, 
 				now.getTimeInMillis(), SAMPLING_INTERVAL_IN_MILLIS, sender);
 		Log.d(LOGGING_TAG,"setAlarm");

@@ -63,7 +63,7 @@ public class WhoCalledOrmLiteHelper  extends OrmLiteSqliteOpenHelper {
 	
 	public void dropAllTable(){
 		try {
-			Log.i(WhoCalledOrmLiteHelper.class.getName(), "onUpgrade");
+			Log.i(WhoCalledOrmLiteHelper.class.getName(), "drop Table");
 			TableUtils.dropTable(connectionSource, Statistic.class, true);
 			TableUtils.dropTable(connectionSource, CallRecord.class, true);
 			TableUtils.dropTable(connectionSource, Contact.class, true);
@@ -75,7 +75,7 @@ public class WhoCalledOrmLiteHelper  extends OrmLiteSqliteOpenHelper {
 	
 	public void dropCallTable(){
 		try {
-			Log.i(WhoCalledOrmLiteHelper.class.getName(), "onUpgrade");
+			Log.i(WhoCalledOrmLiteHelper.class.getName(), "dropCallTable");
 			TableUtils.dropTable(connectionSource, CallRecord.class, true);
 		} catch (SQLException e) {
 			Log.e(WhoCalledOrmLiteHelper.class.getName(), "Can't drop CallTable", e);
@@ -115,8 +115,8 @@ public class WhoCalledOrmLiteHelper  extends OrmLiteSqliteOpenHelper {
 	* Close the database connections and clear any cached DAOs.
 	*/
 	@Override
-	public void close() {
-		super.close();
+	public void close() {		
 		statisticRuntimeDao = null;
+		super.close();
 	}
 }

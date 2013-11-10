@@ -28,6 +28,7 @@ public class WhoCalledUtil {
 	public static WhoCalledOrmLiteHelper getOrmLiteHelper(Context context) {
 		if (ormLiteHelper == null) {
 			ormLiteHelper = OpenHelperManager.getHelper(context, WhoCalledOrmLiteHelper.class);
+			Log.i("getOrmLiteHelper", ormLiteHelper.getReadableDatabase().getPath());
 			Log.d(LOGGING_TAG, "getOrmLiteHelper success!");
 		}
 		return ormLiteHelper;
@@ -38,11 +39,11 @@ public class WhoCalledUtil {
 		if (ormLiteHelper != null) {
 			OpenHelperManager.releaseHelper();
 			ormLiteHelper = null;
-			Log.d(LOGGING_TAG, "getOrmLiteHelper success!");
+			Log.d(LOGGING_TAG, "releaseOrmLiteHelper success!");
 		}
 	}
 	
-	private static void clearCallRecordTable(Context context) {
+	public static void clearCallRecordTable(Context context) {
 		Log.d(LOGGING_TAG, "clearCallRecordTable  ");
 		try {
 			getOrmLiteHelper(context).getCallRecordDao().delete(getOrmLiteHelper(context).getCallRecordDao().queryForAll());
@@ -51,7 +52,7 @@ public class WhoCalledUtil {
 		}
 	}
 	
-	private static void clearContactTable(Context context) {
+	public static void clearContactTable(Context context) {
 		Log.d(LOGGING_TAG, "clearContactTable  ");
 		try {
 			getOrmLiteHelper(context).getContactDao().delete(getOrmLiteHelper(context).getContactDao().queryForAll());
@@ -59,8 +60,9 @@ public class WhoCalledUtil {
 			e.printStackTrace();
 		}
 	}
+
 	
-	private static void clearStatisticTable(Context context) {
+	public static void clearStatisticTable(Context context) {
 		Log.d(LOGGING_TAG, "clearStatisticTable  ");
 		try {
 			getOrmLiteHelper(context).getStatisticDao().delete(getOrmLiteHelper(context).getStatisticDao().queryForAll());
@@ -86,7 +88,7 @@ public class WhoCalledUtil {
 		}
 	}
 	
-	private static void insertToStatistics(Context context,Statistic staistic){
+	public static void insertToStatistics(Context context,Statistic staistic){
 		try {
 			getOrmLiteHelper(context).getStatisticDao().create(staistic);
 		}catch (SQLException e) {
@@ -123,18 +125,16 @@ public class WhoCalledUtil {
 	}
 	
 	public static void storeStatisticsFromRecordsToStatisticTable(Context context){		
-		
+		Log.d(LOGGING_TAG, "storeStatisticsFromRecordsToStatisticTable  ");
 		String statisticDate = getStatisticDateOfCurrentStatistic();
-		
 		clearStatisticTable(context);
-		
 		try{
 			GenericRawResults<String[]> rawResults =
 				getOrmLiteHelper(context).getCallRecordDao().queryRaw(
 						"select phonenumber,count(_id) as counts, sum(callduration) as sumdu, sum(callduration)/count(_id) as ave from " +
 						"CallRecorder group by phonenumber order by count(_id) desc");
 			for (String[] resultArray : rawResults) {
-				if(resultArray != null){
+				if(resultArray != null){					
 					wirteDataToStatistcTable(context,statisticDate,resultArray);
 				}
 			}
@@ -146,7 +146,7 @@ public class WhoCalledUtil {
 	}
 
 //------------------------------------------------------------------------------//
-	private static void insertRecordToCallrecords(Context context,CallRecord callRecord){
+	public static void insertRecordToCallrecords(Context context,CallRecord callRecord){
 		try {
 			getOrmLiteHelper(context).getCallRecordDao().create(callRecord);
 		}catch (SQLException e) {
@@ -163,7 +163,7 @@ public class WhoCalledUtil {
 		insertRecordToCallrecords(context,callRecord);
 	}
 	
-	private static void storeTheCallLogToCallRecordTable(Context context,Cursor cursor) {
+	public static void storeTheCallLogToCallRecordTable(Context context,Cursor cursor) {
 		String phoneNumber;
 		
 		cursor.moveToFirst();
@@ -177,7 +177,7 @@ public class WhoCalledUtil {
 	}
 	
 	public static void storeCallLogsFromQureyToCallRecordTable(Context context,String selection, String[] arg){
-		
+		clearCallRecordTable(context);
 		Cursor cursor = context.getContentResolver().query(CallLog.Calls.CONTENT_URI,
 				null, selection, arg, CallLog.Calls.DEFAULT_SORT_ORDER);
 		storeTheCallLogToCallRecordTable(context,cursor);
@@ -253,7 +253,7 @@ public class WhoCalledUtil {
 		cursor.close();
 	}
 //-----------------------------------------------------//////
-	private static void insertToContact(Context context,Contact contact){
+	public static void insertToContact(Context context,Contact contact){
 		try {
 			getOrmLiteHelper(context).getContactDao().create(contact);
 		}catch (SQLException e) {
@@ -319,30 +319,28 @@ public class WhoCalledUtil {
 			if( now.getTime() - StatisticDate < ONE_DAY ){
 				return true;
 			}else{
-				return false;				
+				return false;
 			}
 	}	
 	
 //----------------------------------------
 	
-	public static GenericRawResults<String[]> getPhoneNumberIfLengthLowerThanInputNumber(Context context, int inputNumber)
+	public static GenericRawResults<String[]> getContactsPhoneNumber(Context context)
 	{
 		
 		try {
-			contacts = getOrmLiteHelper(context).getContactDao().queryRaw("select distinct phonenumber from Contact " +
-					"where length(phonenumber)<= " + Integer.toString(inputNumber) + " order by length(phonenumber)" + ";");
+			contacts = getOrmLiteHelper(context).getContactDao().queryRaw("select distinct phonenumber from Contact");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
-		
+
 		return contacts;
 	}
 	
 	public static void updateCallRecordForUnrecognizedPhoneNumber(Context context){
 		contacts = null;
 		List<CallRecord> records = new ArrayList<CallRecord>();
-		getPhoneNumberIfLengthLowerThanInputNumber(context,8);
+		getContactsPhoneNumber(context);
 		if ( contacts != null ){
 			for (String[] contact : contacts) {
 				Log.i(LOGGING_TAG,"length < 8 number : " + contact[0]);
@@ -368,12 +366,12 @@ public class WhoCalledUtil {
 			
 	}
 	
-	private static boolean compareTheLastSeveralFiguresBetweenTwoInputNumber(String contactNumber, String callRecordNumber,int figrueNumber) {
+	public static boolean compareTheLastSeveralFiguresBetweenTwoInputNumber(String contactNumber, String callRecordNumber,int figrueNumber) {
 		return contactNumber.substring(contactNumber.length()-figrueNumber, contactNumber.length()).equals(
 				callRecordNumber.substring(callRecordNumber.length()-figrueNumber, callRecordNumber.length()));
 	}
 	
-	private static boolean compareFiguresBetweenTwoInputNumber(String contactNumber, String callRecordNumber) {
+	public static boolean compareFiguresBetweenTwoInputNumber(String contactNumber, String callRecordNumber) {
 		Integer contactNumberLength = contactNumber.length();
 		Integer callRecordNumberLength = callRecordNumber.length();
 				
@@ -392,10 +390,11 @@ public class WhoCalledUtil {
 	public static String modifyNumberInCallRecordIfUnrcognized(Context context,String phoneNumber){
 		String result = new String(phoneNumber);
 		
-		GenericRawResults<String[]> allContacts = getPhoneNumberIfLengthLowerThanInputNumber(context,100);
+		GenericRawResults<String[]> allContactsNumber = getContactsPhoneNumber(context
+				);
 		
-		if ( allContacts != null ){
-			for (String[] contact : allContacts) {			
+		if ( allContactsNumber != null ){
+			for (String[] contact : allContactsNumber) {			
 				if (compareFiguresBetweenTwoInputNumber(contact[0],phoneNumber)){
 					//Log.i(LOGGING_TAG,"contact phoneNumber : match!!! ");
 					result = contact[0];

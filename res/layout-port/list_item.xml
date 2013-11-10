@@ -15,29 +15,24 @@
         android:id="@+id/name"
         android:layout_width="40dp"
         android:layout_height="wrap_content"
-        android:gravity="center" />
+        android:gravity="center_vertical|center" />
 
     <TextView
         android:id="@+id/number"
         android:layout_width="60dp"
-        android:layout_height="wrap_content" 
-        android:gravity="center"/>
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical|center" />
 
     <TextView
         android:id="@+id/duration"
         android:layout_width="70dp"
-        android:layout_height="wrap_content" 
-        android:gravity="center"/>
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical|center_horizontal|center" />
     
 	<TextView
 	    android:id="@+id/counts"
-	    android:layout_width="50dp"
+	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
-	    android:gravity="center" />
-
-	<TextView
-        android:id="@+id/average_duration"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content" />
+	    android:gravity="center_vertical|center_horizontal" />
 
 </LinearLayout>

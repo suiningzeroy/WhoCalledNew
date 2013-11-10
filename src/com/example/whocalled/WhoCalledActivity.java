@@ -3,20 +3,13 @@ package com.example.whocalled;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-
-import com.example.whocalled.model.CallRecord;
 import com.example.whocalled.model.Statistic;
 import com.j256.ormlite.android.apptools.OpenHelperManager;
-
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Handler.Callback;
 import android.os.Message;
 import android.provider.CallLog;
 import android.provider.ContactsContract;
@@ -28,8 +21,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -38,15 +29,14 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
-import android.widget.SimpleAdapter.ViewBinder;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class WhoCalledActivity extends Activity implements Handler.Callback {
 
@@ -68,7 +58,6 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 	private  List<Statistic> newstatistics;
 	private Handler handler = new Handler(this);
 	
-	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -76,6 +65,7 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		
 		app =(WhoCalledApp) getApplication();
 		prefs = app.getPrefs();
+		
 		ListView statisticsListView = (ListView)this.findViewById(R.id.WhoCalledList);
 		progressDialog = new ProgressDialog(this);
 		progressDialog.setMax(2);
@@ -87,6 +77,26 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		statistics = new ArrayList<Statistic>();
 		myStatisticAdapter = new StatisticAdapter(statistics);		
 		statisticsListView.setAdapter(myStatisticAdapter);
+		statisticsListView.setOnItemClickListener(new OnItemClickListener(){
+
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id) {
+				Intent detail = new Intent(WhoCalledActivity.this, WhoCalledDetail.class);
+				Statistic clickedStatistic = (Statistic) parent.getAdapter().getItem(position);
+				detail.putExtra("number", clickedStatistic.getPhonenumber());
+				detail.putExtra("callcounts", clickedStatistic.getCallcounts());
+				detail.putExtra("duration", clickedStatistic.getCallduration());
+				detail.putExtra("username", clickedStatistic.getUsername());
+				detail.putExtra("contacturi", clickedStatistic.getContacturi());
+				detail.putExtra("statisticdate", clickedStatistic.getStatisticdate());
+				detail.putExtra("id", clickedStatistic.get_id());
+				//Toast.makeText(getBaseContext(), clickedStatistic.getPhonenumber(), Toast.LENGTH_LONG).show();
+				startActivity(detail);
+				
+			}
+			
+		});
 		
 		orderByColumn = prefs.getString(ORDER_BY, ORDER_BY_CALLCOUNTS);		;
 		if(!prefs.getBoolean(IS_INITIAL_FLAG, false)){
@@ -94,6 +104,7 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		}else{		
 			resetListItems(getStatisticsForAdapter());
 		}	
+		
 	}
 	
 	@Override
@@ -132,7 +143,7 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		}	
 		return true;
 	}
-	
+
 	public boolean handleMessage(Message msg) {
 		
 		switch (msg.getData().getInt(MESSAGE_FLAG)){
@@ -146,27 +157,27 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		}
 		return true;
 	}
-	
+
 	private void resetListItems(List<Statistic> newstatistics) {
 		statistics.clear();
 		statistics.addAll(newstatistics);
 		myStatisticAdapter.notifyDataSetChanged();
 	}
-		
-	private void setBooleanValueToSharedPreferences(String Key, Boolean bool) {
+
+	private void setBooleanValueToSharedPreferences(String key, Boolean bool) {
 
 		Editor editor = prefs.edit();
-		editor.putBoolean(Key, bool);
+		editor.putBoolean(key, bool);
 		editor.commit();
 	}
-	
-	private void setStringValueToSharedPreferences(String Key, String str) {
+
+	private void setStringValueToSharedPreferences(String key, String str) {
 
 		Editor editor = prefs.edit();
-		editor.putString(Key, str);
+		editor.putString(key, str);
 		editor.commit();
 	}
-	
+
 	private class PrepareTask extends AsyncTask<Void, Integer, Integer> {
 		
 		private void sendMessage(int what) {
@@ -226,7 +237,7 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		
 		return result;
 	}
-	
+
 	private Bitmap getContactImageBaseOnContactId(String contactId){
 		Bitmap image = null;
 		
@@ -242,7 +253,7 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 			return image;
 		}
 	}
-	
+
 	private List<Statistic> getStatisticsForAdapter(){
 		String selection = CallLog.Calls.DATE + " > ?";
 		String[] arg = {String.valueOf(WhoCalledUtil.getStatisticDateOfStatisticTable(this))};		
@@ -251,7 +262,7 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 		
 		return statistics;
 	}
-	
+
 	private class StatisticAdapter extends ArrayAdapter<Statistic> {
 		
 		public StatisticAdapter(List<Statistic> statistics) {
@@ -263,7 +274,7 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 				app.getImageCache().put((Long) imageView.getTag(), bitmap);
 			}
 		}
-	
+
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 	
@@ -275,7 +286,6 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 			TextView phonenumber = (TextView) convertView.findViewById(R.id.number);
 			TextView du = (TextView) convertView.findViewById(R.id.duration);
 			TextView counts = (TextView) convertView.findViewById(R.id.counts);
-			TextView ave = (TextView) convertView.findViewById(R.id.average_duration);
 			ImageView image = (ImageView) convertView.findViewById(R.id.userImage);
 			image.setImageBitmap(BitmapFactory.decodeResource(getResources(), R.drawable.ddicon));	
 			Statistic statistic = getItem(position);
@@ -285,7 +295,6 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 				phonenumber.setText(statistic.getPhonenumber());
 				du.setText(String.valueOf(statistic.getCallduration()));
 				counts.setText(String.valueOf(statistic.getCallcounts()));
-				ave.setText(String.valueOf(statistic.getCallaverage()));
 				Bitmap bitmap = app.getImageCache().get(statistic.get_id());
 				if (bitmap != null) {
 					image.setImageBitmap(bitmap);
@@ -300,6 +309,6 @@ public class WhoCalledActivity extends Activity implements Handler.Callback {
 			return convertView;
 		}		 
 	}
-	
+
 
 }

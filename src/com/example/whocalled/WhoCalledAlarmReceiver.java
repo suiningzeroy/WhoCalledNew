@@ -12,7 +12,7 @@ public class WhoCalledAlarmReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		Log.d(LOGGING_TAG,"onReceive");
-		Intent service = new Intent(context, WhoCalledService.class);
+		Intent service = new Intent(context, WhoCalledIntentService.class);
 		context.startService(service);
 	}
 }

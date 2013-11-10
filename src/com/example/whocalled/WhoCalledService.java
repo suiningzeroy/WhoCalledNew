@@ -28,7 +28,6 @@ public class WhoCalledService  extends Service {
 	private static final String LOCK_TAG = "whocalled service";
 	
 	private String LOGGING_TAG = "whocalled service";;
-	
 	private static PowerManager.WakeLock wakeLock = null;
 	
 	public static synchronized void acquireLock(Context ctx){
@@ -59,8 +58,11 @@ public class WhoCalledService  extends Service {
 	
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
+		
 		Log.i(LOGGING_TAG, "onStartCommand");		
-		if(!WhoCalledUtil.isTodaysDataPrepare(this)){
+		
+//		if(!WhoCalledUtil.isTodaysDataPrepare(this)){
+		if(true){
 			Log.i(LOGGING_TAG, "prepareStatistic");
 			prepareStatistic();
 		}
@@ -80,6 +82,7 @@ public class WhoCalledService  extends Service {
 		WhoCalledUtil.storeCallLogsFromQureyToCallRecordTable(this,null,null);
 		WhoCalledUtil.storeStatisticsFromRecordsToStatisticTable(this);
 		WhoCalledUtil.releaseOrmLiteHelper();
+		
 		releaseLock();
 	}
 
