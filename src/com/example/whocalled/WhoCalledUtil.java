@@ -329,7 +329,7 @@ public class WhoCalledUtil {
 	{
 		
 		try {
-			contacts = getOrmLiteHelper(context).getContactDao().queryRaw("select distinct phonenumber from Contact");
+			contacts = getOrmLiteHelper(context).getContactDao().queryRaw("select phonenumber from Contact");
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -390,8 +390,7 @@ public class WhoCalledUtil {
 	public static String modifyNumberInCallRecordIfUnrcognized(Context context,String phoneNumber){
 		String result = new String(phoneNumber);
 		
-		GenericRawResults<String[]> allContactsNumber = getContactsPhoneNumber(context
-				);
+		GenericRawResults<String[]> allContactsNumber = getContactsPhoneNumber(context);
 		
 		if ( allContactsNumber != null ){
 			for (String[] contact : allContactsNumber) {			

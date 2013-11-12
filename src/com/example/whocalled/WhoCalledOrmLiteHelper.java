@@ -115,8 +115,8 @@ public class WhoCalledOrmLiteHelper  extends OrmLiteSqliteOpenHelper {
 	* Close the database connections and clear any cached DAOs.
 	*/
 	@Override
-	public void close() {		
-		statisticRuntimeDao = null;
+	public void close() {			
 		super.close();
+		statisticRuntimeDao = null;
 	}
 }
