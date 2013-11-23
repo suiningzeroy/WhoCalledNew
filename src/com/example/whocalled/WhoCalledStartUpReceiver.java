@@ -14,14 +14,11 @@ import android.content.Intent;
 import android.util.Log;
 
 public class WhoCalledStartUpReceiver extends BroadcastReceiver {
-
 	private static final int INITIAL_DELAY_IN_MINUTES = 2;
 	private static final int SAMPLING_INTERVAL_IN_MILLIS = 24 * 60 * 60 * 1000;
 	private static final int ONE_DAY_IN_MILLIS = 24 * 60 * 60 * 1000;
-	private static final int ONE_HOUR_IN_MILLIS = 24 * 60 * 60 * 1000;
+	private static final int ONE_HOUR_IN_MILLIS = 60 * 60 * 1000;
 	private static final String LOGGING_TAG = "WhoCalled StartUpReceiver";
-	
-	private long millsTimeToOneOclockInMorning;
 	
 	private int getMillsTimeToOneOclockInNextMorning(){
 		Date beginOfDay = new Date();
@@ -50,7 +47,6 @@ public class WhoCalledStartUpReceiver extends BroadcastReceiver {
 				i, PendingIntent.FLAG_CANCEL_CURRENT);
 		Calendar now = Calendar.getInstance();
 		now.add(Calendar.MINUTE, getMillsTimeToOneOclockInNextMorning());
-		//now.add(Calendar.MINUTE, INITIAL_DELAY_IN_MINUTES);
 		alarmMgr.setRepeating(AlarmManager.RTC_WAKEUP, 
 				now.getTimeInMillis(), SAMPLING_INTERVAL_IN_MILLIS, sender);
 		Log.d(LOGGING_TAG,"setAlarm");

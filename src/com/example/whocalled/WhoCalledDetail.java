@@ -47,8 +47,8 @@ public class WhoCalledDetail extends Activity {
 	
 	private String getCallerInfor(String nameOrNumber, Intent request){
 		String countsInfo = "There are " + String.valueOf(request.getLongExtra("callcounts", 0)) + 
-				" call logs for " + nameOrNumber +  " ;\n" +"Total " + 
-				String.valueOf(request.getLongExtra("duration", 0)) + " seconds;\n";
+				" call logs for " + nameOrNumber +  " ;\n"+"\n" +"Total " + 
+				String.valueOf(request.getLongExtra("duration", 0)) + " seconds;\n"+"\n";
 		String aveInfo = "About " + String.valueOf(request.getLongExtra("duration", 0)/request.getLongExtra("callcounts", 999))
 				+ " seconds for each log .";
 		return countsInfo + aveInfo;		

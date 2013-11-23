@@ -15,7 +15,6 @@ public class WhoCalledIntentService extends IntentService {
 	
 	public WhoCalledIntentService() {
 		super("WhoCalledIntentService");
-		// TODO Auto-generated constructor stub
 	}
 	public static synchronized void acquireLock(Context ctx){
 		if (wakeLock == null){
@@ -74,9 +73,6 @@ public class WhoCalledIntentService extends IntentService {
 	private void prepareStatistic(){
 		Log.i(LOGGING_TAG, "Start Refresh Data");	
 		WhoCalledUtil.storeCallLogsFromQureyToCallRecordTable(this,null,null);
-		Log.i(LOGGING_TAG, "service store call records finished.");	
 		WhoCalledUtil.storeStatisticsFromRecordsToStatisticTable(this);
-		Log.i(LOGGING_TAG, "service get statistics finished.");	
-		//WhoCalledUtil.releaseOrmLiteHelper();
 	}
 }

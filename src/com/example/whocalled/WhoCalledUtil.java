@@ -393,9 +393,8 @@ public class WhoCalledUtil {
 		GenericRawResults<String[]> allContactsNumber = getContactsPhoneNumber(context);
 		
 		if ( allContactsNumber != null ){
-			for (String[] contact : allContactsNumber) {			
+			for (String[] contact : allContactsNumber) {
 				if (compareFiguresBetweenTwoInputNumber(contact[0],phoneNumber)){
-					//Log.i(LOGGING_TAG,"contact phoneNumber : match!!! ");
 					result = contact[0];
 					break;
 				}
